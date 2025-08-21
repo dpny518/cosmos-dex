@@ -6,18 +6,25 @@ import toast from 'react-hot-toast';
 export const useDex = (client, account) => {
   const [loading, setLoading] = useState(false);
 
+  // Validate and normalize contract address
+  const contractAddress = config.contractAddress?.toLowerCase();
+  
+  if (!contractAddress || !contractAddress.startsWith('cosmos1')) {
+    console.error('Invalid contract address:', config.contractAddress);
+  }
+
   // Query contract
   const queryContract = useCallback(async (msg) => {
-    if (!client) return null;
+    if (!client || !contractAddress) return null;
     
     try {
-      const result = await client.queryContractSmart(config.contractAddress, msg);
+      const result = await client.queryContractSmart(contractAddress, msg);
       return result;
     } catch (error) {
       console.error('Query failed:', error);
       return null;
     }
-  }, [client]);
+  }, [client, contractAddress]);
 
   // Execute contract
   const executeContract = useCallback(async (msg, funds = []) => {
@@ -26,11 +33,16 @@ export const useDex = (client, account) => {
       return null;
     }
 
+    if (!contractAddress) {
+      toast.error('Contract address not configured');
+      return null;
+    }
+
     setLoading(true);
     try {
       const result = await client.execute(
         account.address,
-        config.contractAddress,
+        contractAddress,
         msg,
         'auto',
         undefined,
@@ -46,7 +58,7 @@ export const useDex = (client, account) => {
     } finally {
       setLoading(false);
     }
-  }, [client, account]);
+  }, [client, account, contractAddress]);
 
   // Create pool
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
