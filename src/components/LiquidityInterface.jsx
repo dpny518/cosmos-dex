@@ -26,8 +26,8 @@ const Tab = styled.button`
   padding: 12px;
   border: none;
   border-radius: 8px;
-  background: ${props => props.active ? 'white' : 'transparent'};
-  color: ${props => props.active ? '#1f2937' : '#6b7280'};
+  background: ${props => props.$active ? 'white' : 'transparent'};
+  color: ${props => props.$active ? '#1f2937' : '#6b7280'};
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
@@ -324,13 +324,13 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     <Container>
       <TabContainer>
         <Tab 
-          active={activeTab === 'add'} 
+          $active={activeTab === 'add'} 
           onClick={() => setActiveTab('add')}
         >
           Add Liquidity
         </Tab>
         <Tab 
-          active={activeTab === 'remove'} 
+          $active={activeTab === 'remove'} 
           onClick={() => setActiveTab('remove')}
         >
           Remove Liquidity
@@ -342,6 +342,17 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
           <Title>
             💧 Add Liquidity
           </Title>
+          
+          <div style={{ 
+            background: '#fff3cd', 
+            border: '1px solid #ffeaa7', 
+            borderRadius: '8px', 
+            padding: '12px', 
+            marginBottom: '20px',
+            color: '#856404'
+          }}>
+            ⚠️ <strong>Note:</strong> Currently only native tokens are supported for pool creation. IBC tokens will be supported in a future update.
+          </div>
 
           <TokenPairContainer>
             <TokenInputCard>

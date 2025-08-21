@@ -23,7 +23,7 @@ const Logo = styled.h1`
 `;
 
 const WalletButton = styled.button`
-  background: ${props => props.connected ? '#10b981' : '#3b82f6'};
+  background: ${props => props.$connected ? '#10b981' : '#3b82f6'};
   color: white;
   border: none;
   padding: 0.75rem 1.5rem;
@@ -33,7 +33,7 @@ const WalletButton = styled.button`
   transition: all 0.2s;
 
   &:hover {
-    background: ${props => props.connected ? '#059669' : '#2563eb'};
+    background: ${props => props.$connected ? '#059669' : '#2563eb'};
     transform: translateY(-1px);
   }
 
@@ -95,7 +95,7 @@ const Header = ({
           )}
           
           <WalletButton
-            connected={isConnected}
+            $connected={isConnected}
             disabled={isConnecting}
             onClick={isConnected ? disconnectWallet : connectWallet}
           >

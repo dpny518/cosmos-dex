@@ -79,11 +79,11 @@ const TokenItem = styled.div`
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
-  border-left: ${props => props.hasBalance ? '3px solid #007bff' : '3px solid transparent'};
-  background-color: ${props => props.hasBalance ? '#f8f9ff' : 'transparent'};
+  border-left: ${props => props.$hasBalance ? '3px solid #007bff' : '3px solid transparent'};
+  background-color: ${props => props.$hasBalance ? '#f8f9ff' : 'transparent'};
   
   &:hover {
-    background-color: ${props => props.hasBalance ? '#e6f3ff' : '#f5f5f5'};
+    background-color: ${props => props.$hasBalance ? '#e6f3ff' : '#f5f5f5'};
   }
 `;
 
@@ -133,9 +133,9 @@ const FilterTab = styled.button`
   border: none;
   padding: 8px 16px;
   cursor: pointer;
-  color: ${props => props.active ? '#007bff' : '#666'};
-  border-bottom: 2px solid ${props => props.active ? '#007bff' : 'transparent'};
-  font-weight: ${props => props.active ? '600' : '400'};
+  color: ${props => props.$active ? '#007bff' : '#666'};
+  border-bottom: 2px solid ${props => props.$active ? '#007bff' : 'transparent'};
+  font-weight: ${props => props.$active ? '600' : '400'};
   
   &:hover {
     color: #007bff;
@@ -277,25 +277,25 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
 
         <FilterTabs>
           <FilterTab 
-            active={filter === 'all'} 
+            $active={filter === 'all'} 
             onClick={() => setFilter('all')}
           >
             All
           </FilterTab>
           <FilterTab 
-            active={filter === 'native'} 
+            $active={filter === 'native'} 
             onClick={() => setFilter('native')}
           >
             Native
           </FilterTab>
           <FilterTab 
-            active={filter === 'ibc'} 
+            $active={filter === 'ibc'} 
             onClick={() => setFilter('ibc')}
           >
             IBC
           </FilterTab>
           <FilterTab 
-            active={filter === 'lp'} 
+            $active={filter === 'lp'} 
             onClick={() => setFilter('lp')}
           >
             LP Tokens
@@ -332,7 +332,7 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
                         return (
                           <TokenItem
                             key={token.denom}
-                            hasBalance={true}
+                            $hasBalance={true}
                             onClick={() => handleTokenSelect(token)}
                           >
                             <TokenLogo
@@ -362,7 +362,7 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
                       {tokensWithoutBalance.map(token => (
                         <TokenItem
                           key={token.denom}
-                          hasBalance={false}
+                          $hasBalance={false}
                           onClick={() => handleTokenSelect(token)}
                         >
                           <TokenLogo

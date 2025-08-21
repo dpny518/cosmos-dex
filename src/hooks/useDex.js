@@ -43,8 +43,14 @@ export const useDex = (client, account) => {
 
     setLoading(true);
     try {
+      // Normalize account address to lowercase to prevent bech32 encoding errors
+      const normalizedAddress = account.address.toLowerCase();
+      
+      console.log('🔧 Original address:', account.address);
+      console.log('🔧 Normalized address:', normalizedAddress);
+      
       const result = await client.execute(
-        account.address,
+        normalizedAddress,
         contractAddress,
         msg,
         'auto',
@@ -66,6 +72,15 @@ export const useDex = (client, account) => {
   // Create pool
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
     console.log('🏊 Creating pool with tokens:', { tokenA, tokenB, amountA, amountB });
+    
+    // Check for IBC tokens and warn user
+    const isIBCTokenA = tokenA.startsWith('ibc/');
+    const isIBCTokenB = tokenB.startsWith('ibc/');
+    
+    if (isIBCTokenA || isIBCTokenB) {
+      toast.error('IBC tokens are not currently supported for pool creation. Please use native tokens only.');
+      return null;
+    }
     
     const msg = {
       create_pool: {

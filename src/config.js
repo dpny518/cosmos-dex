@@ -27,6 +27,14 @@ export const config = {
       coinGeckoId: 'cosmos',
       native: true
     },
+    // Add some test tokens for development
+    {
+      denom: 'stake',
+      symbol: 'STAKE',
+      name: 'Stake Token',
+      decimals: 6,
+      native: true
+    },
     // Add more tokens as needed
   ]
 };

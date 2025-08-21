@@ -28,7 +28,16 @@ export const useKeplr = () => {
       
       // Get accounts
       const accounts = await offlineSigner.getAccounts();
-      const account = accounts[0];
+      const rawAccount = accounts[0];
+      
+      // Normalize address to lowercase to prevent bech32 encoding errors
+      const account = {
+        ...rawAccount,
+        address: rawAccount.address.toLowerCase()
+      };
+      
+      console.log('🔧 Raw account address:', rawAccount.address);
+      console.log('🔧 Normalized account address:', account.address);
       
       // Create signing client
       const signingClient = await SigningCosmWasmClient.connectWithSigner(
