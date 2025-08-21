@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  contract-builder:
+    image: cosmwasm/workspace-optimizer:0.14.0
+    volumes:
+      - ./contracts:/code
+      - ./artifacts:/code/artifacts
+    working_dir: /code
+    command: ["./dex-contract"]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_CHAIN_ID=cosmoshub-4
+      - REACT_APP_RPC_URL=https://cosmos-rpc.polkachu.com
+      - REACT_APP_REST_URL=https://cosmos-api.polkachu.com
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+
+  deployer:
+    build:
+      context: ./scripts
+      dockerfile: Dockerfile
+    volumes:
+      - ./contracts:/contracts
+      - ./artifacts:/artifacts
+      - ./keys:/keys
+      - ./scripts:/scripts
+    environment:
+      - CHAIN_ID=cosmoshub-4
+      - RPC_URL=https://cosmos-rpc.polkachu.com
+      - REST_URL=https://cosmos-api.polkachu.com
+    working_dir: /scripts
