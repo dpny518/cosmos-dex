@@ -1,5 +1,5 @@
 [workspace]
-members = ["dex-contract"]
+members = ["contracts/dex-contract"]
 
 [workspace.dependencies]
 cosmwasm-std = "1.4"

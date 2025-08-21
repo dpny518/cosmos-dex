@@ -1,10 +1,10 @@
 use cosmwasm_std::{
-    coin, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg,
+    coin, BankMsg, CosmosMsg, DepsMut, Env, MessageInfo, Response, Uint128, WasmMsg, to_json_binary,
 };
-use cw20::{Cw20ExecuteMsg, Cw20ReceiveMsg};
+use cw20::Cw20ExecuteMsg;
 
 use crate::error::ContractError;
-use crate::state::{liquidity_key, pool_key, Config, LiquidityPosition, Pool, CONFIG, LIQUIDITY, POOLS};
+use crate::state::{liquidity_key, pool_key, LiquidityPosition, Pool, CONFIG, LIQUIDITY, POOLS};
 
 pub fn execute_create_pool(
     deps: DepsMut,
@@ -29,8 +29,19 @@ pub fn execute_create_pool(
         return Err(ContractError::PoolAlreadyExists {});
     }
 
-    // Calculate initial liquidity (geometric mean)
-    let initial_liquidity = (initial_a * initial_b).sqrt();
+    // Calculate initial liquidity (geometric mean) - using integer square root approximation
+    let product = initial_a * initial_b;
+    let mut initial_liquidity = Uint128::zero();
+    if !product.is_zero() {
+        // Simple integer square root approximation
+        let mut x = product;
+        let mut y = (x + Uint128::from(1u128)) / Uint128::from(2u128);
+        while y < x {
+            x = y;
+            y = (x + product / x) / Uint128::from(2u128);
+        }
+        initial_liquidity = x;
+    }
     
     if initial_liquidity.is_zero() {
         return Err(ContractError::MinLiquidityNotMet {});
@@ -71,7 +82,7 @@ pub fn execute_create_pool(
         // CW20 token transfer
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_a.clone(),
-            msg: to_binary(&Cw20ExecuteMsg::TransferFrom {
+            msg: to_json_binary(&Cw20ExecuteMsg::TransferFrom {
                 owner: info.sender.to_string(),
                 recipient: _env.contract.address.to_string(),
                 amount: initial_a,
@@ -92,7 +103,7 @@ pub fn execute_create_pool(
     } else {
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_b.clone(),
-            msg: to_binary(&Cw20ExecuteMsg::TransferFrom {
+            msg: to_json_binary(&Cw20ExecuteMsg::TransferFrom {
                 owner: info.sender.to_string(),
                 recipient: _env.contract.address.to_string(),
                 amount: initial_b,
@@ -202,7 +213,7 @@ pub fn execute_remove_liquidity(
     } else {
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_a,
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: info.sender.to_string(),
                 amount: amount_a,
             })?,
@@ -218,7 +229,7 @@ pub fn execute_remove_liquidity(
     } else {
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_b,
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: info.sender.to_string(),
                 amount: amount_b,
             })?,
@@ -291,8 +302,8 @@ pub fn execute_swap(
         }));
     } else {
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
-            contract_addr: token_out,
-            msg: to_binary(&Cw20ExecuteMsg::Transfer {
+            contract_addr: token_out.clone(),
+            msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
                 recipient: info.sender.to_string(),
                 amount: amount_out,
             })?,
@@ -349,5 +360,3 @@ pub fn execute_update_fee_rate(
         .add_attribute("method", "update_fee_rate")
         .add_attribute("new_fee_rate", fee_rate))
 }
-
-use cosmwasm_std::to_binary;

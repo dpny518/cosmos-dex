@@ -6,6 +6,3 @@ pub mod execute;
 pub mod query;
 
 pub use crate::error::ContractError;
-
-// Export the contract entry points for WASM compilation
-pub use crate::contract::{execute, instantiate, query};

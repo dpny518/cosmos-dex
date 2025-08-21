@@ -25,17 +25,17 @@ async function generateKeys() {
     };
     
     // Create keys directory if it doesn't exist
-    await fs.ensureDir("/keys");
+    await fs.ensureDir("../keys");
     
     // Save encrypted keys
-    const filename = `/keys/deployer-${Date.now()}.json`;
+    const filename = `../keys/deployer-${Date.now()}.json`;
     await fs.writeJson(filename, keyData, { spaces: 2 });
     
     // Also save to current keys file
-    await fs.writeJson("/keys/current-deployer.json", keyData, { spaces: 2 });
+    await fs.writeJson("../keys/current-deployer.json", keyData, { spaces: 2 });
     
     console.log(`Keys saved to: ${filename}`);
-    console.log(`Current keys saved to: /keys/current-deployer.json`);
+    console.log(`Current keys saved to: ../keys/current-deployer.json`);
     
     console.log("\n⚠️  IMPORTANT SECURITY NOTICE ⚠️");
     console.log("1. Fund this address with ATOM for gas fees");

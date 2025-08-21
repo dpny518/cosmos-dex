@@ -1,0 +1,5 @@
+# Redirect all routes to index.html for SPA routing
+/*    /index.html   200
+
+# API redirects (if needed)
+/api/*  https://cosmos-rest.polkachu.com/:splat  200

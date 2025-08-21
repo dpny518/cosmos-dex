@@ -1,244 +1,388 @@
-# 🌌 Cosmos DEX
+# Cosmos DEX - Decentralized Exchange on Cosmos Hub
 
-A decentralized exchange (DEX) smart contract built on CosmWasm for Cosmos Hub, featuring automated market making (AMM) functionality similar to Uniswap V2.
+A fully functional decentralized exchange (DEX) built on Cosmos Hub using CosmWasm smart contracts. This DEX enables users to create liquidity pools, provide liquidity, and swap tokens with automated market maker (AMM) functionality.
 
-## 🚀 Features
+## 🚀 Live Deployment
 
-- **Token Swaps**: Trade tokens with automated pricing via constant product formula
-- **Liquidity Pools**: Create and manage liquidity pools for token pairs
-- **Liquidity Mining**: Earn fees by providing liquidity to pools
-- **React Frontend**: Modern web interface for interacting with the DEX
-- **Docker Support**: Containerized deployment and development environment
-- **Key Management**: Secure deployer key generation and storage
+**Mainnet Contract Details:**
+- **Network**: Cosmos Hub (cosmoshub-4)
+- **Code ID**: `250`
+- **Contract Address**: `cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez`
+- **Admin**: `cosmos1ch8mj9l4xeq0re62xs90aga0e9f8pxxc49zedu`
+- **Fee Rate**: 30 basis points (0.3%)
 
-## 📋 Prerequisites
+**Transaction Hashes:**
+- Store Contract: `F7895B24EFB41D808FF9EDE77743C26C144B25C1D7715731309DC6156EC87301`
+- Instantiate Contract: `E797B3D79A42D8A76EF666A7BEED21D652BF48443A2B28D403B4CDAA4E00D8CD`
 
-- Docker and Docker Compose
-- Node.js 18+ (for local development)
-- Keplr Wallet browser extension
-- ATOM tokens for gas fees
+## 📋 Table of Contents
 
-## 🛠️ Quick Start
+- [Features](#features)
+- [Architecture](#architecture)
+- [Smart Contract](#smart-contract)
+- [Frontend](#frontend)
+- [Installation](#installation)
+- [Usage](#usage)
+- [API Reference](#api-reference)
+- [Deployment](#deployment)
+- [Contributing](#contributing)
 
-### 1. Clone and Build
+## ✨ Features
 
+### Core DEX Functionality
+- **Liquidity Pools**: Create and manage token pairs
+- **Add/Remove Liquidity**: Provide liquidity to earn trading fees
+- **Token Swaps**: Swap between any tokens in available pools
+- **Price Discovery**: Automated market maker (AMM) pricing
+- **Fee Collection**: Configurable trading fees for liquidity providers
+
+### Advanced Features
+- **Admin Controls**: Update fee rates and admin settings
+- **Pool Analytics**: Query pool reserves, liquidity, and statistics
+- **Swap Simulation**: Preview swap outcomes before execution
+- **Slippage Protection**: Minimum output amount protection
+- **Gas Optimization**: Optimized contract code for minimal gas usage
+
+## 🏗 Architecture
+
+```
+cosmos-dex/
+├── contracts/
+│   └── dex-contract/          # Main DEX smart contract
+│       ├── src/
+│       │   ├── contract.rs    # Entry points
+│       │   ├── execute.rs     # Execute message handlers
+│       │   ├── query.rs       # Query handlers
+│       │   ├── state.rs       # State management
+│       │   ├── msg.rs         # Message definitions
+│       │   ├── error.rs       # Error types
+│       │   └── lib.rs         # Library exports
+│       └── Cargo.toml
+├── frontend/                  # React frontend application
+├── scripts/                   # Deployment and utility scripts
+├── artifacts/                 # Compiled WASM contracts
+└── docs/                      # Documentation
+```
+
+## 📝 Smart Contract
+
+### Contract Overview
+
+The DEX contract is built using CosmWasm and implements a constant product AMM (x * y = k) similar to Uniswap V2.
+
+### Key Components
+
+#### State Management
+- **CONFIG**: Stores admin address and fee rate
+- **POOLS**: Maps token pairs to pool information
+- **LIQUIDITY**: Tracks user liquidity positions
+
+#### Message Types
+
+**InstantiateMsg**
+```rust
+pub struct InstantiateMsg {
+    pub admin: Option<String>,
+    pub fee_rate: Uint128, // Fee rate in basis points (e.g., 30 = 0.3%)
+}
+```
+
+**ExecuteMsg**
+- `CreatePool`: Create a new trading pair
+- `AddLiquidity`: Add liquidity to existing pool
+- `RemoveLiquidity`: Remove liquidity from pool
+- `Swap`: Execute token swap
+- `UpdateAdmin`: Update contract admin
+- `UpdateFeeRate`: Update trading fee rate
+
+**QueryMsg**
+- `Config`: Get contract configuration
+- `Pool`: Get specific pool information
+- `Pools`: Get all pools with pagination
+- `Liquidity`: Get user's liquidity position
+- `Simulation`: Simulate swap outcome
+
+### Contract Functions
+
+#### Pool Creation
+```rust
+pub fn execute_create_pool(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_a: String,
+    token_b: String,
+    initial_a: Uint128,
+    initial_b: Uint128,
+) -> Result<Response, ContractError>
+```
+
+#### Liquidity Management
+```rust
+pub fn execute_add_liquidity(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_a: String,
+    token_b: String,
+    amount_a: Uint128,
+    amount_b: Uint128,
+    min_liquidity: Uint128,
+) -> Result<Response, ContractError>
+```
+
+#### Token Swapping
+```rust
+pub fn execute_swap(
+    deps: DepsMut,
+    env: Env,
+    info: MessageInfo,
+    token_in: String,
+    token_out: String,
+    amount_in: Uint128,
+    min_amount_out: Uint128,
+) -> Result<Response, ContractError>
+```
+
+## 🖥 Frontend
+
+The frontend is a React application that provides a user-friendly interface for interacting with the DEX contract.
+
+### Features
+- **Wallet Connection**: Connect Keplr and other Cosmos wallets
+- **Pool Management**: Create pools and manage liquidity
+- **Token Swapping**: Intuitive swap interface
+- **Portfolio Tracking**: View your liquidity positions
+- **Real-time Data**: Live pool statistics and pricing
+
+### Technology Stack
+- **React 18**: Modern React with hooks
+- **TypeScript**: Type-safe development
+- **CosmJS**: Cosmos blockchain interaction
+- **Tailwind CSS**: Utility-first styling
+- **Vite**: Fast build tool and dev server
+
+## 🛠 Installation
+
+### Prerequisites
+- Node.js 18+
+- Rust 1.70+
+- Docker (for contract optimization)
+- `gaiad` CLI tool
+
+### Clone Repository
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/cosmos-dex.git
 cd cosmos-dex
-
-# Build smart contracts
-make build-contracts
-
-# Generate deployer keys
-make generate-keys
 ```
 
-### 2. Fund Deployer Address
-
-After generating keys, you'll see a deployer address. Fund this address with ATOM:
-
+### Install Dependencies
 ```bash
-# The deployer address will be shown after key generation
-# Send at least 10 ATOM to this address for deployment costs
+# Install frontend dependencies
+cd frontend
+npm install
+
+# Install Rust dependencies (for contract development)
+cd ../contracts
+cargo build
 ```
 
-### 3. Deploy Contracts
-
+### Environment Setup
 ```bash
-# Deploy to Cosmos Hub mainnet
-make deploy-contracts
+# Copy environment template
+cp frontend/.env.example frontend/.env
 
-# Or for testnet deployment, set environment variables:
-export CHAIN_ID=theta-testnet-001
-export RPC_URL=https://rpc.sentry-01.theta-testnet.polypore.xyz
-export REST_URL=https://rest.sentry-01.theta-testnet.polypore.xyz
-make deploy-contracts
+# Edit environment variables
+nano frontend/.env
 ```
 
-### 4. Update Frontend Configuration
+## 🚀 Usage
 
-After deployment, update the contract address in the frontend:
+### Building the Contract
 
+#### Development Build
 ```bash
-# Edit frontend/src/config.js and update:
-contractAddress: 'cosmos1...' # Replace with your deployed contract address
+./build-simple.sh
 ```
 
-### 5. Start Frontend
-
+#### Production Build (Optimized)
 ```bash
-make run-frontend
-# Frontend will be available at http://localhost:3000
+./build-workspace-optimized.sh
 ```
 
-## 💰 ATOM Deposit and Fee Structure
-
-### Gas Fees
-
-All transactions on Cosmos Hub require ATOM for gas fees:
-
-- **Contract Deployment**: ~0.5-1 ATOM
-- **Create Pool**: ~0.01-0.02 ATOM
-- **Add Liquidity**: ~0.008-0.015 ATOM  
-- **Remove Liquidity**: ~0.008-0.015 ATOM
-- **Token Swap**: ~0.005-0.01 ATOM
-
-### DEX Trading Fees
-
-The DEX charges a **0.3%** trading fee on all swaps:
-
-- Fee is automatically deducted from input tokens
-- Fees are distributed proportionally to liquidity providers
-- Fee rate is configurable by contract admin
-
-### Where to Deposit ATOM
-
-#### For Deployment:
-1. **Generate Keys**: Run `make generate-keys`
-2. **Fund Address**: Send ATOM to the generated deployer address
-3. **Deploy**: Run `make deploy-contracts`
-
-#### For Trading:
-1. **Connect Keplr**: Use the frontend to connect your Keplr wallet
-2. **Ensure Balance**: Have sufficient ATOM for gas fees
-3. **Trade**: Gas fees will be automatically calculated and paid
-
-### Recommended ATOM Holdings:
-
-- **Deployers**: 10+ ATOM for deployment and initial operations
-- **Traders**: 1+ ATOM for regular trading activities  
-- **Liquidity Providers**: 2+ ATOM for pool creation and management
-
-## 🏗️ Architecture
-
-### Smart Contract Components
-
-- **Pool Management**: Create and manage AMM pools
-- **Swap Engine**: Constant product market maker
-- **Liquidity Tracking**: LP token accounting
-- **Fee Collection**: Configurable trading fees
-
-### Frontend Components
-
-- **Wallet Integration**: Keplr wallet connection
-- **Swap Interface**: Token trading interface
-- **Liquidity Interface**: Pool management UI
-- **Real-time Updates**: Live balance and pool data
-
-## 🔧 Development
-
-### Local Development
-
+### Running the Frontend
 ```bash
-# Start development environment
-docker-compose up -d
-
-# Build contracts locally
-./build-contracts.sh
-
-# Run tests
-cd contracts/dex-contract && cargo test
+cd frontend
+npm run dev
 ```
 
-### Contract Schema
-
-Generate JSON schema for contract messages:
-
+### Deploying to Mainnet
 ```bash
-cd contracts/dex-contract
-cargo schema
+# Make sure you have a funded wallet
+./deploy-mainnet.sh
 ```
 
-## 📝 Contract Messages
+## 📚 API Reference
 
-### Instantiate
-```json
-{
-  "admin": "cosmos1...", // Optional admin address
-  "fee_rate": "30"       // Fee rate in basis points (30 = 0.3%)
-}
+### Query Contract State
+
+#### Get Contract Config
+```bash
+gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"config":{}}' --node https://cosmos-rpc.polkachu.com/
 ```
 
-### Execute Messages
-
-#### Create Pool
-```json
-{
-  "create_pool": {
-    "token_a": "uatom",
-    "token_b": "cosmos1...", // CW20 token address
-    "initial_a": "1000000",  // 1 ATOM
-    "initial_b": "1000000"   // Token B amount
-  }
-}
-```
-
-#### Swap
-```json
-{
-  "swap": {
-    "token_in": "uatom",
-    "token_out": "cosmos1...",
-    "amount_in": "1000000",
-    "min_amount_out": "990000" // Slippage protection
-  }
-}
-```
-
-### Query Messages
-
-#### Pool Info
-```json
-{
-  "pool": {
-    "token_a": "uatom",
-    "token_b": "cosmos1..."
-  }
-}
+#### Get Pool Information
+```bash
+gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"pool":{"token_a":"uatom","token_b":"token_address"}}' --node https://cosmos-rpc.polkachu.com/
 ```
 
 #### Simulate Swap
-```json
-{
-  "simulation": {
-    "token_in": "uatom", 
-    "token_out": "cosmos1...",
-    "amount_in": "1000000"
-  }
-}
+```bash
+gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"simulation":{"token_in":"uatom","token_out":"token_address","amount_in":"1000000"}}' --node https://cosmos-rpc.polkachu.com/
 ```
 
-## 🔐 Security
+### Execute Contract Functions
 
-### Key Management
+#### Create Pool
+```bash
+gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"create_pool":{"token_a":"uatom","token_b":"token_address","initial_a":"1000000","initial_b":"1000000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
+```
 
-- Deployer keys are stored in `/keys/` directory
-- Keys are in JSON format with mnemonic phrases
-- **Keep keys secure** and never commit to version control
-- Use different keys for mainnet and testnet
+#### Add Liquidity
+```bash
+gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"add_liquidity":{"token_a":"uatom","token_b":"token_address","amount_a":"500000","amount_b":"500000","min_liquidity":"1000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
+```
 
-### Smart Contract Security
+#### Swap Tokens
+```bash
+gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"swap":{"token_in":"uatom","token_out":"token_address","amount_in":"100000","min_amount_out":"95000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
+```
 
-- Implements slippage protection
-- Validates all inputs and state transitions
-- Uses proven AMM formulas
-- Admin functions are access-controlled
+## 🚀 Deployment
 
-## 🚨 Important Notes
+### Contract Deployment
 
-1. **Mainnet Deployment**: Ensure thorough testing on testnet first
-2. **Key Security**: Store deployer keys securely, consider hardware wallets for production
-3. **Gas Prices**: Monitor network congestion and adjust gas prices accordingly
-4. **Slippage**: Always use appropriate slippage settings for swaps
-5. **Pool Ratios**: Maintain balanced liquidity ratios for efficient trading
+The contract has been deployed to Cosmos Hub mainnet. To deploy to other networks:
+
+1. **Update Network Configuration**
+   ```bash
+   # Edit deploy-mainnet.sh
+   CHAIN_ID="your-chain-id"
+   NODE="your-rpc-endpoint"
+   ```
+
+2. **Build Optimized Contract**
+   ```bash
+   ./build-workspace-optimized.sh
+   ```
+
+3. **Deploy Contract**
+   ```bash
+   ./deploy-mainnet.sh
+   ```
+
+### Frontend Deployment
+
+#### Cloudflare Pages
+1. **Build the frontend**
+   ```bash
+   cd frontend
+   npm run build
+   ```
+
+2. **Deploy to Cloudflare Pages**
+   - Connect your GitHub repository to Cloudflare Pages
+   - Set build command: `npm run build`
+   - Set build output directory: `dist`
+   - Add environment variables from `.env`
+
+#### Environment Variables for Production
+```env
+VITE_CHAIN_ID=cosmoshub-4
+VITE_CHAIN_NAME=Cosmos Hub
+VITE_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
+VITE_REST_ENDPOINT=https://cosmos-rest.polkachu.com
+VITE_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
+VITE_DENOM=uatom
+VITE_COIN_DECIMALS=6
+VITE_COIN_MINIMAL_DENOM=uatom
+```
+
+## 🧪 Testing
+
+### Unit Tests
+```bash
+cd contracts/dex-contract
+cargo test
+```
+
+### Integration Tests
+```bash
+cd contracts
+cargo test --test integration
+```
+
+### Frontend Tests
+```bash
+cd frontend
+npm test
+```
+
+## 📊 Gas Costs
+
+| Operation | Estimated Gas | Cost (0.025 uatom/gas) |
+|-----------|---------------|------------------------|
+| Store Contract | ~2.3M | ~57,500 uatom |
+| Instantiate | ~240K | ~6,000 uatom |
+| Create Pool | ~200K | ~5,000 uatom |
+| Add Liquidity | ~150K | ~3,750 uatom |
+| Swap | ~120K | ~3,000 uatom |
+| Remove Liquidity | ~130K | ~3,250 uatom |
+
+## 🔒 Security
+
+### Audit Status
+- **Status**: Self-audited
+- **Recommendations**: Professional audit recommended before mainnet use
+- **Known Issues**: None currently identified
+
+### Security Features
+- **Admin Controls**: Limited admin functions
+- **Slippage Protection**: Minimum output validation
+- **Overflow Protection**: Safe math operations
+- **Access Control**: Proper permission checks
+
+## 🤝 Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Development Guidelines
+- Follow Rust best practices for contract code
+- Use TypeScript for frontend development
+- Add tests for new features
+- Update documentation
+
+## 📄 License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 Acknowledgments
+
+- **CosmWasm**: Smart contract framework
+- **Cosmos SDK**: Blockchain framework
+- **Cosmos Hub**: Deployment network
+- **React**: Frontend framework
 
 ## 📞 Support
 
-- Review logs in Docker containers for troubleshooting
-- Check Keplr connection for frontend issues  
-- Verify sufficient ATOM balance for all transactions
-- Ensure contract address is correctly configured in frontend
+- **GitHub Issues**: [Create an issue](https://github.com/your-username/cosmos-dex/issues)
+- **Discord**: Join our community
+- **Documentation**: [Full docs](https://docs.cosmos-dex.com)
 
-## 🛡️ License
+---
 
-This project is open source and available under the MIT License.
+**Built with ❤️ for the Cosmos ecosystem**

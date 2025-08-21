@@ -1,5 +1,5 @@
 use cosmwasm_std::{
-    entry_point, to_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
+    entry_point, to_json_binary, Binary, Deps, DepsMut, Env, MessageInfo, Response, StdResult,
 };
 use cw2::set_contract_version;
 
@@ -87,18 +87,18 @@ pub fn execute(
 #[entry_point]
 pub fn query(deps: Deps, _env: Env, msg: QueryMsg) -> StdResult<Binary> {
     match msg {
-        QueryMsg::Config {} => to_binary(&query_config(deps)?),
-        QueryMsg::Pool { token_a, token_b } => to_binary(&query_pool(deps, token_a, token_b)?),
-        QueryMsg::Pools { start_after, limit } => to_binary(&query_pools(deps, start_after, limit)?),
+        QueryMsg::Config {} => to_json_binary(&query_config(deps)?),
+        QueryMsg::Pool { token_a, token_b } => to_json_binary(&query_pool(deps, token_a, token_b)?),
+        QueryMsg::Pools { start_after, limit } => to_json_binary(&query_pools(deps, start_after, limit)?),
         QueryMsg::Liquidity {
             user,
             token_a,
             token_b,
-        } => to_binary(&query_liquidity(deps, user, token_a, token_b)?),
+        } => to_json_binary(&query_liquidity(deps, user, token_a, token_b)?),
         QueryMsg::Simulation {
             token_in,
             token_out,
             amount_in,
-        } => to_binary(&query_simulation(deps, token_in, token_out, amount_in)?),
+        } => to_json_binary(&query_simulation(deps, token_in, token_out, amount_in)?),
     }
 }

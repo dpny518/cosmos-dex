@@ -15,7 +15,7 @@ const config = {
 
 async function loadWallet() {
     try {
-        const keyFile = "/keys/current-deployer.json";
+        const keyFile = "../keys/current-deployer.json";
         const keyData = await fs.readJson(keyFile);
         
         console.log(`Loading wallet from: ${keyFile}`);
@@ -99,9 +99,9 @@ async function saveDeploymentInfo(codeId, contractAddress, deployerAddress) {
     };
     
     // Save deployment info
-    await fs.writeJson("/keys/deployment-info.json", deploymentInfo, { spaces: 2 });
+    await fs.writeJson("../keys/deployment-info.json", deploymentInfo, { spaces: 2 });
     
-    console.log("\n📄 Deployment information saved to: /keys/deployment-info.json");
+    console.log("\n📄 Deployment information saved to: ../keys/deployment-info.json");
     console.log("🎉 DEX deployment completed successfully!");
     
     return deploymentInfo;
@@ -150,8 +150,14 @@ async function main() {
         // Check balance
         await checkBalance(client, deployerAddress);
         
-        // Find contract file
-        const contractPath = "/artifacts/dex_contract.wasm";
+        // Find contract file - try wasmd v0.60.1 compatible version first
+        let contractPath = "../artifacts/dex_contract_v060.wasm";
+        if (!await fs.pathExists(contractPath)) {
+            contractPath = "../artifacts/dex_contract_compatible.wasm";
+        }
+        if (!await fs.pathExists(contractPath)) {
+            contractPath = "../artifacts/dex_contract.wasm";
+        }
         if (!await fs.pathExists(contractPath)) {
             console.error(`Contract file not found: ${contractPath}`);
             console.log("Please run 'make build-contracts' first");
