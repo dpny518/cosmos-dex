@@ -73,6 +73,15 @@ export const useDex = (client, account) => {
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
     console.log('🏊 Creating pool with tokens:', { tokenA, tokenB, amountA, amountB });
     
+    // For now, check if we're trying to use IBC tokens and provide helpful error
+    const isIBCTokenA = tokenA.startsWith('ibc/');
+    const isIBCTokenB = tokenB.startsWith('ibc/');
+    
+    if (isIBCTokenA || isIBCTokenB) {
+      toast.error('The current contract version does not support IBC tokens. An updated contract with IBC support is being prepared for deployment.');
+      return null;
+    }
+    
     const msg = {
       create_pool: {
         token_a: tokenA,
@@ -84,15 +93,14 @@ export const useDex = (client, account) => {
 
     console.log('📝 Create pool message:', msg);
 
-    // Handle native tokens (ATOM and IBC tokens) - send as funds
+    // Handle native tokens (ATOM only for current contract)
     const funds = [];
-    if (tokenA === 'uatom' || tokenA.startsWith('ibc/')) {
+    if (tokenA === 'uatom') {
       funds.push(coin(amountA.toString(), tokenA));
     }
-    if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
+    if (tokenB === 'uatom') {
       funds.push(coin(amountB.toString(), tokenB));
     }
-    // Note: CW20 tokens are handled by the contract via TransferFrom calls
 
     console.log('💰 Funds for transaction:', funds);
 

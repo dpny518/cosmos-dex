@@ -344,14 +344,14 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
           </Title>
           
           <div style={{ 
-            background: '#d1ecf1', 
-            border: '1px solid #bee5eb', 
+            background: '#fff3cd', 
+            border: '1px solid #ffeaa7', 
             borderRadius: '8px', 
             padding: '12px', 
             marginBottom: '20px',
-            color: '#0c5460'
+            color: '#856404'
           }}>
-            ℹ️ <strong>Info:</strong> This DEX supports native tokens (ATOM) and IBC tokens. CW20 tokens are also supported.
+            ⚠️ <strong>Current Limitation:</strong> The deployed contract currently supports native ATOM and CW20 tokens only. An updated contract with full IBC token support is ready and will be deployed soon.
           </div>
 
           <TokenPairContainer>
