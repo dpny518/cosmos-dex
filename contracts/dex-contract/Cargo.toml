@@ -1,5 +1,5 @@
 [package]
-name = "dex-contract"
+name = "dex_contract"
 version = "0.1.0"
 authors = ["Your Name <your.email@example.com>"]
 edition = "2021"
@@ -10,7 +10,7 @@ exclude = [
 ]
 
 [lib]
-crate-type = ["cdylib", "rlib"]
+crate-type = ["cdylib"]
 
 [profile.release]
 opt-level = 3
@@ -24,10 +24,8 @@ incremental = false
 overflow-checks = true
 
 [features]
-default = ["contract"]
-contract = []
-interface = ["export"]
-export = []
+default = []
+library = []
 
 [dependencies]
 cosmwasm-std = { version = "1.4", features = ["staking", "stargate"] }

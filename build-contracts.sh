@@ -7,12 +7,28 @@ echo "🔨 Building CosmWasm contracts..."
 # Create artifacts directory
 mkdir -p artifacts
 
-# Build using Docker with workspace optimizer
-echo "Running workspace optimizer..."
-docker run --rm -v "$(pwd)":/code \
-  --mount type=volume,source="$(basename "$(pwd)")_cache",target=/code/target \
-  --mount type=volume,source=registry_cache,target=/usr/local/cargo/registry \
-  cosmwasm/workspace-optimizer:0.14.0
+echo "Building with Rust Docker container..."
+
+# Build the contract using a standard Rust container
+docker run --rm \
+  -v "$(pwd)/contracts:/workspace" \
+  -v "$(pwd)/artifacts:/artifacts" \
+  -w /workspace/dex-contract \
+  --platform linux/amd64 \
+  rust:1.70 bash -c "
+    # Install wasm target
+    rustup target add wasm32-unknown-unknown
+    
+    # Build the contract
+    cargo build --release --target wasm32-unknown-unknown --lib
+    
+    # Copy the wasm file to artifacts
+    cp target/wasm32-unknown-unknown/release/dex_contract.wasm /artifacts/
+    
+    # Show file info
+    ls -la target/wasm32-unknown-unknown/release/*.wasm
+    echo 'Contract built successfully!'
+  "
 
 echo "✅ Contract build completed!"
 echo "📦 Artifacts created in ./artifacts/"

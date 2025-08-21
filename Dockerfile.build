@@ -1,0 +1,18 @@
+FROM rust:1.70
+
+# Install wasm32 target
+RUN rustup target add wasm32-unknown-unknown
+
+# Set working directory
+WORKDIR /code
+
+# Copy source code
+COPY contracts/ .
+
+# Build the contract
+WORKDIR /code/dex-contract
+RUN cargo build --release --target wasm32-unknown-unknown --lib
+
+# Copy artifact to output directory
+RUN mkdir -p /artifacts
+RUN cp target/wasm32-unknown-unknown/release/dex_contract.wasm /artifacts/

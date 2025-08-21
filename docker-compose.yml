@@ -7,7 +7,6 @@ services:
       - ./contracts:/code
       - ./artifacts:/code/artifacts
     working_dir: /code
-    command: ["./dex-contract"]
 
   frontend:
     build:

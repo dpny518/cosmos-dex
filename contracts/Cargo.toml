@@ -2,6 +2,9 @@
 members = ["dex-contract"]
 resolver = "2"
 
+[workspace.dependencies]
+cosmwasm-std = "1.4"
+
 [profile.release]
 opt-level = 3
 debug = false
