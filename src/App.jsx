@@ -3,11 +3,11 @@ import { BrowserRouter as Router, Routes, Route, NavLink } from 'react-router-do
 import styled, { createGlobalStyle } from 'styled-components';
 import { Toaster } from 'react-hot-toast';
 
-import { useKeplr } from './hooks/useKeplr';
-import { useDex } from './hooks/useDex';
-import Header from './components/Header';
-import SwapInterface from './components/SwapInterface';
-import LiquidityInterface from './components/LiquidityInterface';
+import { useKeplr } from './hooks/useKeplr.js';
+import { useDex } from './hooks/useDex.js';
+import Header from './components/Header.jsx';
+import SwapInterface from './components/SwapInterface.jsx';
+import LiquidityInterface from './components/LiquidityInterface.jsx';
 import { config } from './config';
 
 const GlobalStyle = createGlobalStyle`

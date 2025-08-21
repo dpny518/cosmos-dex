@@ -1,0 +1,19 @@
+{
+  "name": "dex-deployer",
+  "version": "1.0.0",
+  "description": "Deployment scripts for Cosmos DEX",
+  "main": "deploy.js",
+  "scripts": {
+    "deploy": "node deploy.js",
+    "generate-keys": "node generate-keys.js"
+  },
+  "dependencies": {
+    "@cosmjs/cosmwasm-stargate": "^0.31.3",
+    "@cosmjs/stargate": "^0.31.3",
+    "@cosmjs/proto-signing": "^0.31.3",
+    "@cosmjs/crypto": "^0.31.3",
+    "@cosmjs/encoding": "^0.31.3",
+    "fs-extra": "^11.1.1",
+    "dotenv": "^16.3.1"
+  }
+}

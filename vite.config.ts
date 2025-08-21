@@ -16,7 +16,7 @@ export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    minify: 'terser',
+    minify: 'esbuild', // Use esbuild instead of terser for faster builds
     rollupOptions: {
       output: {
         manualChunks: {
@@ -27,12 +27,6 @@ export default defineConfig({
         },
       },
     },
-    terserOptions: {
-      compress: {
-        drop_console: true,
-        drop_debugger: true,
-      },
-    },
   },
   server: {
     port: 3000,
@@ -41,5 +35,8 @@ export default defineConfig({
   preview: {
     port: 3000,
     host: true,
+  },
+  optimizeDeps: {
+    include: ['@cosmjs/cosmwasm-stargate', '@cosmjs/stargate', '@cosmjs/proto-signing'],
   },
 })
