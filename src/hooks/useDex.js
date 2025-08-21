@@ -9,8 +9,11 @@ export const useDex = (client, account) => {
   // Validate and normalize contract address
   const contractAddress = config.contractAddress?.toLowerCase();
   
+  console.log('🏗️ Contract address from config:', config.contractAddress);
+  console.log('🏗️ Normalized contract address:', contractAddress);
+  
   if (!contractAddress || !contractAddress.startsWith('cosmos1')) {
-    console.error('Invalid contract address:', config.contractAddress);
+    console.error('❌ Invalid contract address:', config.contractAddress);
   }
 
   // Query contract
@@ -62,6 +65,8 @@ export const useDex = (client, account) => {
 
   // Create pool
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
+    console.log('🏊 Creating pool with tokens:', { tokenA, tokenB, amountA, amountB });
+    
     const msg = {
       create_pool: {
         token_a: tokenA,
@@ -71,6 +76,8 @@ export const useDex = (client, account) => {
       }
     };
 
+    console.log('📝 Create pool message:', msg);
+
     // Handle native token funds
     const funds = [];
     if (tokenA === 'uatom') {
@@ -79,6 +86,8 @@ export const useDex = (client, account) => {
     if (tokenB === 'uatom') {
       funds.push(coin(amountB.toString(), 'uatom'));
     }
+
+    console.log('💰 Funds for transaction:', funds);
 
     return await executeContract(msg, funds);
   }, [executeContract]);
