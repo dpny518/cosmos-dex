@@ -67,11 +67,11 @@ pub fn execute_create_pool(
     // Transfer tokens from user to contract
     let mut messages = vec![];
     
-    // Handle native tokens (ATOM) and CW20 tokens
-    if token_a == "uatom" {
-        // Verify native token was sent
+    // Handle native tokens (ATOM and IBC tokens) and CW20 tokens
+    if token_a == "uatom" || token_a.starts_with("ibc/") {
+        // Native token (including IBC tokens) - verify it was sent with the transaction
         let sent_amount = info.funds.iter()
-            .find(|coin| coin.denom == "uatom")
+            .find(|coin| coin.denom == token_a)
             .map(|coin| coin.amount)
             .unwrap_or_else(Uint128::zero);
         
@@ -91,9 +91,10 @@ pub fn execute_create_pool(
         }));
     }
 
-    if token_b == "uatom" {
+    if token_b == "uatom" || token_b.starts_with("ibc/") {
+        // Native token (including IBC tokens) - verify it was sent with the transaction
         let sent_amount = info.funds.iter()
-            .find(|coin| coin.denom == "uatom")
+            .find(|coin| coin.denom == token_b)
             .map(|coin| coin.amount)
             .unwrap_or_else(Uint128::zero);
         
@@ -205,12 +206,14 @@ pub fn execute_remove_liquidity(
     // Send tokens back to user
     let mut messages = vec![];
     
-    if token_a == "uatom" {
+    if token_a == "uatom" || token_a.starts_with("ibc/") {
+        // Native token (including IBC tokens)
         messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: info.sender.to_string(),
-            amount: vec![coin(amount_a.u128(), "uatom")],
+            amount: vec![coin(amount_a.u128(), &token_a)],
         }));
     } else {
+        // CW20 token
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_a,
             msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
@@ -221,12 +224,14 @@ pub fn execute_remove_liquidity(
         }));
     }
 
-    if token_b == "uatom" {
+    if token_b == "uatom" || token_b.starts_with("ibc/") {
+        // Native token (including IBC tokens)
         messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: info.sender.to_string(),
-            amount: vec![coin(amount_b.u128(), "uatom")],
+            amount: vec![coin(amount_b.u128(), &token_b)],
         }));
     } else {
+        // CW20 token
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_b,
             msg: to_json_binary(&Cw20ExecuteMsg::Transfer {
@@ -295,12 +300,14 @@ pub fn execute_swap(
     // Send output tokens to user
     let mut messages = vec![];
     
-    if token_out == "uatom" {
+    if token_out == "uatom" || token_out.starts_with("ibc/") {
+        // Native token (including IBC tokens)
         messages.push(CosmosMsg::Bank(BankMsg::Send {
             to_address: info.sender.to_string(),
-            amount: vec![coin(amount_out.u128(), "uatom")],
+            amount: vec![coin(amount_out.u128(), &token_out)],
         }));
     } else {
+        // CW20 token
         messages.push(CosmosMsg::Wasm(WasmMsg::Execute {
             contract_addr: token_out.clone(),
             msg: to_json_binary(&Cw20ExecuteMsg::Transfer {

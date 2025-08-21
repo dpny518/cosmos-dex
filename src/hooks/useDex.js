@@ -73,15 +73,6 @@ export const useDex = (client, account) => {
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
     console.log('🏊 Creating pool with tokens:', { tokenA, tokenB, amountA, amountB });
     
-    // Check for IBC tokens and warn user
-    const isIBCTokenA = tokenA.startsWith('ibc/');
-    const isIBCTokenB = tokenB.startsWith('ibc/');
-    
-    if (isIBCTokenA || isIBCTokenB) {
-      toast.error('IBC tokens are not currently supported for pool creation. Please use native tokens only.');
-      return null;
-    }
-    
     const msg = {
       create_pool: {
         token_a: tokenA,
@@ -93,18 +84,28 @@ export const useDex = (client, account) => {
 
     console.log('📝 Create pool message:', msg);
 
-    // Handle native token funds
+    // Handle native tokens (ATOM and IBC tokens) - send as funds
     const funds = [];
-    if (tokenA === 'uatom') {
-      funds.push(coin(amountA.toString(), 'uatom'));
+    if (tokenA === 'uatom' || tokenA.startsWith('ibc/')) {
+      funds.push(coin(amountA.toString(), tokenA));
     }
-    if (tokenB === 'uatom') {
-      funds.push(coin(amountB.toString(), 'uatom'));
+    if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
+      funds.push(coin(amountB.toString(), tokenB));
     }
+    // Note: CW20 tokens are handled by the contract via TransferFrom calls
 
     console.log('💰 Funds for transaction:', funds);
 
-    return await executeContract(msg, funds);
+    try {
+      return await executeContract(msg, funds);
+    } catch (error) {
+      // Provide more specific error handling for bech32 issues
+      if (error.message.includes('decoding bech32 failed')) {
+        toast.error('Smart contract validation error. Please check token addresses and try again.');
+        console.error('Bech32 validation error:', error);
+      }
+      throw error; // Re-throw to let executeContract handle the general error
+    }
   }, [executeContract]);
 
   // Add liquidity
@@ -120,11 +121,11 @@ export const useDex = (client, account) => {
     };
 
     const funds = [];
-    if (tokenA === 'uatom') {
-      funds.push(coin(amountA.toString(), 'uatom'));
+    if (tokenA === 'uatom' || tokenA.startsWith('ibc/')) {
+      funds.push(coin(amountA.toString(), tokenA));
     }
-    if (tokenB === 'uatom') {
-      funds.push(coin(amountB.toString(), 'uatom'));
+    if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
+      funds.push(coin(amountB.toString(), tokenB));
     }
 
     return await executeContract(msg, funds);
@@ -157,8 +158,8 @@ export const useDex = (client, account) => {
     };
 
     const funds = [];
-    if (tokenIn === 'uatom') {
-      funds.push(coin(amountIn.toString(), 'uatom'));
+    if (tokenIn === 'uatom' || tokenIn.startsWith('ibc/')) {
+      funds.push(coin(amountIn.toString(), tokenIn));
     }
 
     return await executeContract(msg, funds);
