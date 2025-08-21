@@ -69,7 +69,47 @@ class TokenRegistry {
       this.addTokensFromBalances(balances);
     }
 
-    return Array.from(this.tokens.values());
+    // FORCE ADD YOUR USDC TOKEN - Always ensure it's available
+    const usdcDenom = 'ibc/F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013';
+    if (!this.tokens.has(usdcDenom)) {
+      console.log('🚨 Force adding USDC token to ensure availability');
+      const usdcToken = {
+        denom: usdcDenom,
+        symbol: 'USDC',
+        name: 'USD Coin (Your Token)',
+        decimals: 6,
+        description: 'Your USDC from Noble chain via IBC',
+        logo: 'https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.svg',
+        coingecko_id: 'usd-coin',
+        native: false,
+        type: 'ibc',
+        traces: [{
+          type: 'ibc',
+          counterparty: {
+            channel_id: 'channel-4',
+            base_denom: 'uusdc',
+            chain_name: 'noble'
+          },
+          chain: {
+            channel_id: 'channel-536'
+          }
+        }],
+        ibc: {
+          source_channel: 'channel-536',
+          source_denom: 'uusdc',
+          source_chain: 'noble'
+        },
+        force_added: true
+      };
+      this.tokens.set(usdcDenom, usdcToken);
+      console.log('✅ USDC token force added:', usdcToken);
+    }
+
+    const allTokensArray = Array.from(this.tokens.values());
+    console.log('📊 Final token count:', allTokensArray.length);
+    console.log('🔍 USDC in final list:', allTokensArray.find(t => t.symbol === 'USDC') ? 'YES' : 'NO');
+    
+    return allTokensArray;
   }
 
   // Get local/custom tokens
