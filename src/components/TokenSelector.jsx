@@ -79,9 +79,11 @@ const TokenItem = styled.div`
   border-radius: 8px;
   cursor: pointer;
   transition: background-color 0.2s;
+  border-left: ${props => props.hasBalance ? '3px solid #007bff' : '3px solid transparent'};
+  background-color: ${props => props.hasBalance ? '#f8f9ff' : 'transparent'};
   
   &:hover {
-    background-color: #f5f5f5;
+    background-color: ${props => props.hasBalance ? '#e6f3ff' : '#f5f5f5'};
   }
 `;
 
@@ -144,6 +146,17 @@ const LoadingMessage = styled.div`
   text-align: center;
   padding: 40px;
   color: #666;
+`;
+
+const SectionHeader = styled.div`
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #666;
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e0e0e0;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 `;
 
 const NoResults = styled.div`
@@ -209,15 +222,26 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
       );
     }
 
-    // Sort by balance (if available), then by symbol
+    // Sort by balance (tokens with balance first), then by symbol
     return filtered.sort((a, b) => {
       const balanceA = parseFloat(balances[a.denom] || '0');
       const balanceB = parseFloat(balances[b.denom] || '0');
       
-      if (balanceA !== balanceB) {
-        return balanceB - balanceA; // Higher balance first
+      // First, sort by whether they have a balance (non-zero balance first)
+      const hasBalanceA = balanceA > 0;
+      const hasBalanceB = balanceB > 0;
+      
+      if (hasBalanceA && !hasBalanceB) return -1; // A has balance, B doesn't - A first
+      if (!hasBalanceA && hasBalanceB) return 1;  // B has balance, A doesn't - B first
+      
+      // If both have balances or both don't have balances, sort by balance amount
+      if (hasBalanceA && hasBalanceB) {
+        if (balanceA !== balanceB) {
+          return balanceB - balanceA; // Higher balance first
+        }
       }
       
+      // Finally, sort alphabetically by symbol
       return a.symbol.localeCompare(b.symbol);
     });
   }, [tokens, searchQuery, filter, balances]);
@@ -286,30 +310,80 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
               {searchQuery ? 'No tokens found' : 'No tokens available'}
             </NoResults>
           ) : (
-            filteredTokens.map(token => (
-              <TokenItem
-                key={token.denom}
-                onClick={() => handleTokenSelect(token)}
-              >
-                <TokenLogo
-                  src={token.logo || '/default-token-logo.svg'}
-                  alt={token.symbol}
-                  onError={(e) => {
-                    e.target.src = '/default-token-logo.svg';
-                  }}
-                />
-                <TokenInfo>
-                  <TokenSymbol>{token.symbol}</TokenSymbol>
-                  <TokenName>{token.name}</TokenName>
-                  <TokenDenom>{token.denom}</TokenDenom>
-                </TokenInfo>
-                {balances[token.denom] && (
-                  <TokenBalance>
-                    {formatBalance(balances[token.denom], token.decimals)}
-                  </TokenBalance>
-                )}
-              </TokenItem>
-            ))
+            (() => {
+              // Separate tokens with and without balances
+              const tokensWithBalance = filteredTokens.filter(token => {
+                const balance = balances[token.denom];
+                return balance && parseFloat(balance) > 0;
+              });
+              
+              const tokensWithoutBalance = filteredTokens.filter(token => {
+                const balance = balances[token.denom];
+                return !balance || parseFloat(balance) === 0;
+              });
+
+              return (
+                <>
+                  {tokensWithBalance.length > 0 && (
+                    <>
+                      <SectionHeader>Your Tokens</SectionHeader>
+                      {tokensWithBalance.map(token => {
+                        const balance = balances[token.denom];
+                        return (
+                          <TokenItem
+                            key={token.denom}
+                            hasBalance={true}
+                            onClick={() => handleTokenSelect(token)}
+                          >
+                            <TokenLogo
+                              src={token.logo || '/default-token-logo.svg'}
+                              alt={token.symbol}
+                              onError={(e) => {
+                                e.target.src = '/default-token-logo.svg';
+                              }}
+                            />
+                            <TokenInfo>
+                              <TokenSymbol>{token.symbol}</TokenSymbol>
+                              <TokenName>{token.name}</TokenName>
+                              <TokenDenom>{token.denom}</TokenDenom>
+                            </TokenInfo>
+                            <TokenBalance>
+                              {formatBalance(balance, token.decimals)}
+                            </TokenBalance>
+                          </TokenItem>
+                        );
+                      })}
+                    </>
+                  )}
+                  
+                  {tokensWithoutBalance.length > 0 && (
+                    <>
+                      <SectionHeader>All Tokens</SectionHeader>
+                      {tokensWithoutBalance.map(token => (
+                        <TokenItem
+                          key={token.denom}
+                          hasBalance={false}
+                          onClick={() => handleTokenSelect(token)}
+                        >
+                          <TokenLogo
+                            src={token.logo || '/default-token-logo.svg'}
+                            alt={token.symbol}
+                            onError={(e) => {
+                              e.target.src = '/default-token-logo.svg';
+                            }}
+                          />
+                          <TokenInfo>
+                            <TokenSymbol>{token.symbol}</TokenSymbol>
+                            <TokenName>{token.name}</TokenName>
+                            <TokenDenom>{token.denom}</TokenDenom>
+                          </TokenInfo>
+                        </TokenItem>
+                      ))}
+                    </>
+                  )}
+                </>
+              );
+            })()
           )}
         </TokenList>
       </ModalContent>
