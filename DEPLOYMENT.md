@@ -54,18 +54,18 @@ Your Cosmos DEX has been successfully deployed to Cosmos Hub mainnet and is read
 4. **Add Environment Variables**
    Only these essential variables are needed (Keplr provides the rest):
    ```
-   REACT_APP_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
-   REACT_APP_CODE_ID=250
-   REACT_APP_APP_NAME=Cosmos DEX
-   REACT_APP_APP_VERSION=1.0.0
+   VITE_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
+   VITE_CODE_ID=250
+   VITE_APP_NAME=Cosmos DEX
+   VITE_APP_VERSION=1.0.0
    ```
 
    Optional overrides (only if you want custom endpoints):
    ```
-   REACT_APP_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
-   REACT_APP_REST_ENDPOINT=https://cosmos-rest.polkachu.com
-   REACT_APP_GAS_PRICES=0.025uatom
-   REACT_APP_GAS_ADJUSTMENT=1.3
+   VITE_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
+   VITE_REST_ENDPOINT=https://cosmos-rest.polkachu.com
+   VITE_GAS_PRICES=0.025uatom
+   VITE_GAS_ADJUSTMENT=1.3
    ```
 
 5. **Deploy**

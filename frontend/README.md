@@ -108,20 +108,20 @@ The app uses minimal environment variables since most network information comes 
 
 **Required Variables:**
 ```env
-REACT_APP_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
-REACT_APP_CODE_ID=250
+VITE_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
+VITE_CODE_ID=250
 ```
 
 **Optional Variables:**
 ```env
-REACT_APP_APP_NAME=Cosmos DEX
-REACT_APP_APP_VERSION=1.0.0
+VITE_APP_NAME=Cosmos DEX
+VITE_APP_VERSION=1.0.0
 
 # Only needed if you want to override Keplr's default endpoints
-REACT_APP_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
-REACT_APP_REST_ENDPOINT=https://cosmos-rest.polkachu.com
-REACT_APP_GAS_PRICES=0.025uatom
-REACT_APP_GAS_ADJUSTMENT=1.3
+VITE_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
+VITE_REST_ENDPOINT=https://cosmos-rest.polkachu.com
+VITE_GAS_PRICES=0.025uatom
+VITE_GAS_ADJUSTMENT=1.3
 ```
 
 **What Keplr Provides Automatically:**
