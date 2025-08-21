@@ -79,10 +79,29 @@ export const useKeplr = () => {
       balances.forEach(balance => {
         balanceMap[balance.denom] = balance.amount;
       });
+      console.log('💰 getAllBalances result:', balanceMap);
       return balanceMap;
     } catch (error) {
       console.error('Failed to get all balances:', error);
-      return {};
+      // Fallback: try to get individual balances for known tokens
+      try {
+        const atomBalance = await client.getBalance(address, 'uatom');
+        const usdcBalance = await client.getBalance(address, 'ibc/F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013');
+        
+        const fallbackBalances = {};
+        if (atomBalance.amount !== '0') {
+          fallbackBalances[atomBalance.denom] = atomBalance.amount;
+        }
+        if (usdcBalance.amount !== '0') {
+          fallbackBalances[usdcBalance.denom] = usdcBalance.amount;
+        }
+        
+        console.log('💰 Fallback balances:', fallbackBalances);
+        return fallbackBalances;
+      } catch (fallbackError) {
+        console.error('Fallback balance fetch failed:', fallbackError);
+        return {};
+      }
     }
   }, [client]);
 

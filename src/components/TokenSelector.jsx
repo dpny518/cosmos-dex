@@ -167,9 +167,19 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
   const loadTokens = async () => {
     setLoading(true);
     try {
+      console.log('🔄 TokenSelector: Loading tokens with balances:', balances);
       const allTokens = await tokenRegistry.loadTokens(balances);
       const lpTokens = tokenRegistry.getAllLPTokens();
-      setTokens([...allTokens, ...lpTokens]);
+      const combinedTokens = [...allTokens, ...lpTokens];
+      
+      console.log('📋 TokenSelector: All tokens loaded:', combinedTokens.length);
+      console.log('🔍 TokenSelector: Token list:', combinedTokens.map(t => ({
+        symbol: t.symbol,
+        denom: t.denom,
+        type: t.type
+      })));
+      
+      setTokens(combinedTokens);
     } catch (error) {
       console.error('Failed to load tokens:', error);
     } finally {

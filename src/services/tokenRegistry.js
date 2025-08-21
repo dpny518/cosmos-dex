@@ -74,9 +74,36 @@ class TokenRegistry {
 
   // Get local/custom tokens
   getLocalTokens() {
-    // These could be loaded from a local JSON file or API
+    // Add your USDC token manually for testing
     return [
-      // Add any custom tokens here
+      {
+        denom: 'ibc/F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013',
+        symbol: 'USDC',
+        name: 'USD Coin (Noble)',
+        decimals: 6,
+        description: 'USD Coin from Noble chain via IBC (your token)',
+        logo: 'https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.svg',
+        coingecko_id: 'usd-coin',
+        native: false,
+        type: 'ibc',
+        traces: [{
+          type: 'ibc',
+          counterparty: {
+            channel_id: 'channel-4',
+            base_denom: 'uusdc',
+            chain_name: 'noble'
+          },
+          chain: {
+            channel_id: 'channel-536'
+          }
+        }],
+        ibc: {
+          source_channel: 'channel-536',
+          source_denom: 'uusdc',
+          source_chain: 'noble'
+        },
+        manually_added: true
+      }
     ];
   }
 
