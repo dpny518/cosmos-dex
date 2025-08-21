@@ -1,388 +1,272 @@
-# Cosmos DEX - Decentralized Exchange on Cosmos Hub
+# Cosmos DEX Frontend
 
-A fully functional decentralized exchange (DEX) built on Cosmos Hub using CosmWasm smart contracts. This DEX enables users to create liquidity pools, provide liquidity, and swap tokens with automated market maker (AMM) functionality.
+A modern React frontend for the Cosmos DEX built with Vite, TypeScript, and Tailwind CSS.
 
-## 🚀 Live Deployment
-
-**Mainnet Contract Details:**
-- **Network**: Cosmos Hub (cosmoshub-4)
-- **Code ID**: `250`
-- **Contract Address**: `cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez`
-- **Admin**: `cosmos1ch8mj9l4xeq0re62xs90aga0e9f8pxxc49zedu`
-- **Fee Rate**: 30 basis points (0.3%)
-
-**Transaction Hashes:**
-- Store Contract: `F7895B24EFB41D808FF9EDE77743C26C144B25C1D7715731309DC6156EC87301`
-- Instantiate Contract: `E797B3D79A42D8A76EF666A7BEED21D652BF48443A2B28D403B4CDAA4E00D8CD`
-
-## 📋 Table of Contents
-
-- [Features](#features)
-- [Architecture](#architecture)
-- [Smart Contract](#smart-contract)
-- [Frontend](#frontend)
-- [Installation](#installation)
-- [Usage](#usage)
-- [API Reference](#api-reference)
-- [Deployment](#deployment)
-- [Contributing](#contributing)
-
-## ✨ Features
-
-### Core DEX Functionality
-- **Liquidity Pools**: Create and manage token pairs
-- **Add/Remove Liquidity**: Provide liquidity to earn trading fees
-- **Token Swaps**: Swap between any tokens in available pools
-- **Price Discovery**: Automated market maker (AMM) pricing
-- **Fee Collection**: Configurable trading fees for liquidity providers
-
-### Advanced Features
-- **Admin Controls**: Update fee rates and admin settings
-- **Pool Analytics**: Query pool reserves, liquidity, and statistics
-- **Swap Simulation**: Preview swap outcomes before execution
-- **Slippage Protection**: Minimum output amount protection
-- **Gas Optimization**: Optimized contract code for minimal gas usage
-
-## 🏗 Architecture
-
-```
-cosmos-dex/
-├── contracts/
-│   └── dex-contract/          # Main DEX smart contract
-│       ├── src/
-│       │   ├── contract.rs    # Entry points
-│       │   ├── execute.rs     # Execute message handlers
-│       │   ├── query.rs       # Query handlers
-│       │   ├── state.rs       # State management
-│       │   ├── msg.rs         # Message definitions
-│       │   ├── error.rs       # Error types
-│       │   └── lib.rs         # Library exports
-│       └── Cargo.toml
-├── frontend/                  # React frontend application
-├── scripts/                   # Deployment and utility scripts
-├── artifacts/                 # Compiled WASM contracts
-└── docs/                      # Documentation
-```
-
-## 📝 Smart Contract
-
-### Contract Overview
-
-The DEX contract is built using CosmWasm and implements a constant product AMM (x * y = k) similar to Uniswap V2.
-
-### Key Components
-
-#### State Management
-- **CONFIG**: Stores admin address and fee rate
-- **POOLS**: Maps token pairs to pool information
-- **LIQUIDITY**: Tracks user liquidity positions
-
-#### Message Types
-
-**InstantiateMsg**
-```rust
-pub struct InstantiateMsg {
-    pub admin: Option<String>,
-    pub fee_rate: Uint128, // Fee rate in basis points (e.g., 30 = 0.3%)
-}
-```
-
-**ExecuteMsg**
-- `CreatePool`: Create a new trading pair
-- `AddLiquidity`: Add liquidity to existing pool
-- `RemoveLiquidity`: Remove liquidity from pool
-- `Swap`: Execute token swap
-- `UpdateAdmin`: Update contract admin
-- `UpdateFeeRate`: Update trading fee rate
-
-**QueryMsg**
-- `Config`: Get contract configuration
-- `Pool`: Get specific pool information
-- `Pools`: Get all pools with pagination
-- `Liquidity`: Get user's liquidity position
-- `Simulation`: Simulate swap outcome
-
-### Contract Functions
-
-#### Pool Creation
-```rust
-pub fn execute_create_pool(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    token_a: String,
-    token_b: String,
-    initial_a: Uint128,
-    initial_b: Uint128,
-) -> Result<Response, ContractError>
-```
-
-#### Liquidity Management
-```rust
-pub fn execute_add_liquidity(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    token_a: String,
-    token_b: String,
-    amount_a: Uint128,
-    amount_b: Uint128,
-    min_liquidity: Uint128,
-) -> Result<Response, ContractError>
-```
-
-#### Token Swapping
-```rust
-pub fn execute_swap(
-    deps: DepsMut,
-    env: Env,
-    info: MessageInfo,
-    token_in: String,
-    token_out: String,
-    amount_in: Uint128,
-    min_amount_out: Uint128,
-) -> Result<Response, ContractError>
-```
-
-## 🖥 Frontend
-
-The frontend is a React application that provides a user-friendly interface for interacting with the DEX contract.
-
-### Features
-- **Wallet Connection**: Connect Keplr and other Cosmos wallets
-- **Pool Management**: Create pools and manage liquidity
-- **Token Swapping**: Intuitive swap interface
-- **Portfolio Tracking**: View your liquidity positions
-- **Real-time Data**: Live pool statistics and pricing
-
-### Technology Stack
-- **React 18**: Modern React with hooks
-- **TypeScript**: Type-safe development
-- **CosmJS**: Cosmos blockchain interaction
-- **Tailwind CSS**: Utility-first styling
-- **Vite**: Fast build tool and dev server
-
-## 🛠 Installation
+## 🚀 Quick Start
 
 ### Prerequisites
 - Node.js 18+
-- Rust 1.70+
-- Docker (for contract optimization)
-- `gaiad` CLI tool
+- npm or yarn
 
-### Clone Repository
+### Installation
 ```bash
-git clone https://github.com/your-username/cosmos-dex.git
-cd cosmos-dex
-```
-
-### Install Dependencies
-```bash
-# Install frontend dependencies
-cd frontend
 npm install
-
-# Install Rust dependencies (for contract development)
-cd ../contracts
-cargo build
 ```
 
-### Environment Setup
+### Development
 ```bash
-# Copy environment template
-cp frontend/.env.example frontend/.env
-
-# Edit environment variables
-nano frontend/.env
+npm run start
 ```
 
-## 🚀 Usage
-
-### Building the Contract
-
-#### Development Build
+### Build for Production
 ```bash
-./build-simple.sh
+npm run build
 ```
 
-#### Production Build (Optimized)
-```bash
-./build-workspace-optimized.sh
-```
+## 🌐 Deployment to Cloudflare Pages
 
-### Running the Frontend
-```bash
-cd frontend
-npm run dev
-```
+### Method 1: GitHub Integration (Recommended)
 
-### Deploying to Mainnet
-```bash
-# Make sure you have a funded wallet
-./deploy-mainnet.sh
-```
-
-## 📚 API Reference
-
-### Query Contract State
-
-#### Get Contract Config
-```bash
-gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"config":{}}' --node https://cosmos-rpc.polkachu.com/
-```
-
-#### Get Pool Information
-```bash
-gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"pool":{"token_a":"uatom","token_b":"token_address"}}' --node https://cosmos-rpc.polkachu.com/
-```
-
-#### Simulate Swap
-```bash
-gaiad query wasm contract-state smart cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"simulation":{"token_in":"uatom","token_out":"token_address","amount_in":"1000000"}}' --node https://cosmos-rpc.polkachu.com/
-```
-
-### Execute Contract Functions
-
-#### Create Pool
-```bash
-gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"create_pool":{"token_a":"uatom","token_b":"token_address","initial_a":"1000000","initial_b":"1000000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
-```
-
-#### Add Liquidity
-```bash
-gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"add_liquidity":{"token_a":"uatom","token_b":"token_address","amount_a":"500000","amount_b":"500000","min_liquidity":"1000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
-```
-
-#### Swap Tokens
-```bash
-gaiad tx wasm execute cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez '{"swap":{"token_in":"uatom","token_out":"token_address","amount_in":"100000","min_amount_out":"95000"}}' --from your-key --chain-id cosmoshub-4 --gas-prices 0.025uatom --gas auto --gas-adjustment 1.3 --yes
-```
-
-## 🚀 Deployment
-
-### Contract Deployment
-
-The contract has been deployed to Cosmos Hub mainnet. To deploy to other networks:
-
-1. **Update Network Configuration**
+1. **Push to GitHub**
    ```bash
-   # Edit deploy-mainnet.sh
-   CHAIN_ID="your-chain-id"
-   NODE="your-rpc-endpoint"
+   git add .
+   git commit -m "Deploy frontend"
+   git push origin main
    ```
 
-2. **Build Optimized Contract**
-   ```bash
-   ./build-workspace-optimized.sh
+2. **Connect to Cloudflare Pages**
+   - Go to [Cloudflare Pages](https://pages.cloudflare.com/)
+   - Click "Create a project"
+   - Connect your GitHub repository
+   - Select the `cosmos-dex` repository
+
+3. **Configure Build Settings**
+   - **Framework preset**: Vite
+   - **Build command**: `cd frontend && npm install && npm run build`
+   - **Build output directory**: `frontend/dist`
+   - **Root directory**: `/` (leave empty)
+
+4. **Environment Variables**
+   Add these environment variables in Cloudflare Pages settings:
+   ```
+   REACT_APP_CHAIN_ID=cosmoshub-4
+   REACT_APP_CHAIN_NAME=Cosmos Hub
+   REACT_APP_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
+   REACT_APP_REST_ENDPOINT=https://cosmos-rest.polkachu.com
+   REACT_APP_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
+   REACT_APP_CODE_ID=250
+   REACT_APP_DENOM=uatom
+   REACT_APP_COIN_DECIMALS=6
+   REACT_APP_COIN_MINIMAL_DENOM=uatom
+   REACT_APP_COIN_DISPLAY_NAME=ATOM
+   REACT_APP_GAS_PRICES=0.025uatom
+   REACT_APP_GAS_ADJUSTMENT=1.3
+   REACT_APP_APP_NAME=Cosmos DEX
+   REACT_APP_APP_VERSION=1.0.0
+   REACT_APP_ENVIRONMENT=production
    ```
 
-3. **Deploy Contract**
-   ```bash
-   ./deploy-mainnet.sh
-   ```
+5. **Deploy**
+   - Click "Save and Deploy"
+   - Your site will be available at `https://your-project.pages.dev`
 
-### Frontend Deployment
+### Method 2: Direct Upload
 
-#### Cloudflare Pages
-1. **Build the frontend**
+1. **Build the project**
    ```bash
-   cd frontend
    npm run build
    ```
 
-2. **Deploy to Cloudflare Pages**
-   - Connect your GitHub repository to Cloudflare Pages
-   - Set build command: `npm run build`
-   - Set build output directory: `dist`
-   - Add environment variables from `.env`
+2. **Upload to Cloudflare Pages**
+   - Go to Cloudflare Pages dashboard
+   - Click "Upload assets"
+   - Upload the `dist` folder contents
 
-#### Environment Variables for Production
+### Method 3: Wrangler CLI
+
+1. **Install Wrangler**
+   ```bash
+   npm install -g wrangler
+   ```
+
+2. **Login to Cloudflare**
+   ```bash
+   wrangler login
+   ```
+
+3. **Deploy**
+   ```bash
+   npm run build
+   wrangler pages deploy dist --project-name cosmos-dex
+   ```
+
+## 🔧 Configuration
+
+### Environment Variables
+
+The app uses minimal environment variables since most network information comes from Keplr's built-in chain registry.
+
+**Required Variables:**
 ```env
-VITE_CHAIN_ID=cosmoshub-4
-VITE_CHAIN_NAME=Cosmos Hub
+VITE_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
+VITE_CODE_ID=250
+```
+
+**Optional Variables:**
+```env
+VITE_APP_NAME=Cosmos DEX
+VITE_APP_VERSION=1.0.0
+
+# Only needed if you want to override Keplr's default endpoints
 VITE_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
 VITE_REST_ENDPOINT=https://cosmos-rest.polkachu.com
-VITE_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
-VITE_DENOM=uatom
-VITE_COIN_DECIMALS=6
-VITE_COIN_MINIMAL_DENOM=uatom
+VITE_GAS_PRICES=0.025uatom
+VITE_GAS_ADJUSTMENT=1.3
+```
+
+**What Keplr Provides Automatically:**
+- Chain ID (cosmoshub-4)
+- Chain name (Cosmos Hub)
+- RPC/REST endpoints
+- Native token info (ATOM, uatom, 6 decimals)
+- Gas price suggestions
+- Bech32 prefix (cosmos)
+
+Copy `.env.example` to `.env` and update the contract address:
+
+```bash
+cp .env.example .env
+```
+
+### Key Configuration Options
+
+- **REACT_APP_CONTRACT_ADDRESS**: Your deployed contract address
+- **REACT_APP_RPC_ENDPOINT**: Cosmos Hub RPC endpoint
+- **REACT_APP_REST_ENDPOINT**: Cosmos Hub REST API endpoint
+- **REACT_APP_CHAIN_ID**: Chain ID (cosmoshub-4 for mainnet)
+
+## 📁 Project Structure
+
+```
+frontend/
+├── public/                 # Static assets
+├── src/
+│   ├── components/        # React components
+│   ├── hooks/            # Custom React hooks
+│   ├── pages/            # Page components
+│   ├── services/         # API services
+│   ├── types/            # TypeScript types
+│   ├── utils/            # Utility functions
+│   └── main.tsx          # App entry point
+├── _headers              # Cloudflare Pages headers
+├── _redirects            # Cloudflare Pages redirects
+├── .env                  # Environment variables
+├── .env.example          # Environment template
+├── package.json          # Dependencies
+├── tailwind.config.js    # Tailwind CSS config
+├── tsconfig.json         # TypeScript config
+└── vite.config.ts        # Vite config
+```
+
+## 🎨 Features
+
+### Core Features
+- **Wallet Connection**: Keplr wallet integration
+- **Token Swapping**: Intuitive swap interface
+- **Liquidity Management**: Add/remove liquidity
+- **Pool Creation**: Create new trading pairs
+- **Portfolio Tracking**: View your positions
+
+### UI/UX Features
+- **Responsive Design**: Mobile-first approach
+- **Dark Mode**: Toggle between light/dark themes
+- **Real-time Updates**: Live price and balance updates
+- **Toast Notifications**: User feedback system
+- **Loading States**: Smooth loading indicators
+
+### Technical Features
+- **TypeScript**: Type-safe development
+- **Vite**: Fast build tool and dev server
+- **Tailwind CSS**: Utility-first styling
+- **CosmJS**: Cosmos blockchain interaction
+- **React Router**: Client-side routing
+
+## 🔒 Security
+
+### Content Security Policy
+The app includes a strict CSP header that only allows:
+- Scripts from self and inline (required for React)
+- Styles from self, inline, and Google Fonts
+- Images from self, data URLs, and HTTPS
+- Connections to Cosmos RPC/REST endpoints
+
+### Headers
+Security headers are configured in `_headers`:
+- X-Frame-Options: DENY
+- X-Content-Type-Options: nosniff
+- X-XSS-Protection: 1; mode=block
+- Referrer-Policy: strict-origin-when-cross-origin
+
+## 📊 Performance
+
+### Optimization Features
+- **Code Splitting**: Automatic chunk splitting
+- **Tree Shaking**: Remove unused code
+- **Asset Optimization**: Minified CSS/JS
+- **Caching**: Long-term caching for static assets
+- **Preloading**: Critical resource preloading
+
+### Bundle Analysis
+```bash
+npm run build
+npx vite-bundle-analyzer dist
 ```
 
 ## 🧪 Testing
 
 ### Unit Tests
 ```bash
-cd contracts/dex-contract
-cargo test
-```
-
-### Integration Tests
-```bash
-cd contracts
-cargo test --test integration
-```
-
-### Frontend Tests
-```bash
-cd frontend
 npm test
 ```
 
-## 📊 Gas Costs
+### Type Checking
+```bash
+npm run type-check
+```
 
-| Operation | Estimated Gas | Cost (0.025 uatom/gas) |
-|-----------|---------------|------------------------|
-| Store Contract | ~2.3M | ~57,500 uatom |
-| Instantiate | ~240K | ~6,000 uatom |
-| Create Pool | ~200K | ~5,000 uatom |
-| Add Liquidity | ~150K | ~3,750 uatom |
-| Swap | ~120K | ~3,000 uatom |
-| Remove Liquidity | ~130K | ~3,250 uatom |
+### Linting
+```bash
+npm run lint
+```
 
-## 🔒 Security
+## 🔄 CI/CD
 
-### Audit Status
-- **Status**: Self-audited
-- **Recommendations**: Professional audit recommended before mainnet use
-- **Known Issues**: None currently identified
+The project is configured for automatic deployment on Cloudflare Pages:
 
-### Security Features
-- **Admin Controls**: Limited admin functions
-- **Slippage Protection**: Minimum output validation
-- **Overflow Protection**: Safe math operations
-- **Access Control**: Proper permission checks
+1. **Trigger**: Push to main branch
+2. **Build**: `cd frontend && npm install && npm run build`
+3. **Deploy**: Automatic deployment to Cloudflare Pages
+4. **Preview**: Preview deployments for pull requests
 
-## 🤝 Contributing
+## 📱 PWA Support
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+The app includes PWA manifest for mobile installation:
+- Installable on mobile devices
+- Offline support (coming soon)
+- Native app-like experience
 
-### Development Guidelines
-- Follow Rust best practices for contract code
-- Use TypeScript for frontend development
-- Add tests for new features
-- Update documentation
+## 🌍 Browser Support
 
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
-## 🙏 Acknowledgments
-
-- **CosmWasm**: Smart contract framework
-- **Cosmos SDK**: Blockchain framework
-- **Cosmos Hub**: Deployment network
-- **React**: Frontend framework
+- Chrome 90+
+- Firefox 88+
+- Safari 14+
+- Edge 90+
 
 ## 📞 Support
 
-- **GitHub Issues**: [Create an issue](https://github.com/your-username/cosmos-dex/issues)
-- **Discord**: Join our community
-- **Documentation**: [Full docs](https://docs.cosmos-dex.com)
+- **Issues**: [GitHub Issues](https://github.com/your-username/cosmos-dex/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-username/cosmos-dex/discussions)
 
----
+## 📄 License
 
-**Built with ❤️ for the Cosmos ecosystem**
+MIT License - see [LICENSE](../LICENSE) file for details.
