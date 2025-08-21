@@ -1,9 +1,9 @@
 // Network configuration
 export const config = {
-  chainId: process.env.REACT_APP_CHAIN_ID || 'cosmoshub-4',
+  chainId: import.meta.env.VITE_CHAIN_ID || 'cosmoshub-4',
   chainName: 'Cosmos Hub',
-  rpc: process.env.REACT_APP_RPC_URL || 'https://cosmos-rpc.polkachu.com',
-  rest: process.env.REACT_APP_REST_URL || 'https://cosmos-api.polkachu.com',
+  rpc: import.meta.env.VITE_RPC_ENDPOINT || 'https://cosmos-rpc.polkachu.com',
+  rest: import.meta.env.VITE_REST_ENDPOINT || 'https://cosmos-rest.polkachu.com',
   bech32Prefix: 'cosmos',
   coinDenom: 'ATOM',
   coinMinimalDenom: 'uatom',
@@ -14,8 +14,8 @@ export const config = {
     high: 0.04,
   },
   
-  // Contract address (will be updated after deployment)
-  contractAddress: process.env.REACT_APP_CONTRACT_ADDRESS || 'cosmos1...',
+  // Contract address (deployed to mainnet)
+  contractAddress: import.meta.env.VITE_CONTRACT_ADDRESS || 'cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez',
   
   // Supported tokens
   tokens: [
