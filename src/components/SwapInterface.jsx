@@ -1,100 +1,124 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import TokenSelector from './TokenSelector';
+import { tokenRegistry } from '../services/tokenRegistry';
 
-const SwapContainer = styled.div`
+const Container = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
-  margin: 0 auto;
-`;
-
-const Title = styled.h2`
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  text-align: center;
-`;
-
-const TokenInput = styled.div`
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
   border-radius: 12px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  transition: border-color 0.2s;
-
-  &:focus-within {
-    border-color: #3b82f6;
-  }
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 `;
 
-const TokenHeader = styled.div`
+const Title = styled.h3`
+  margin: 0 0 20px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const SwapCard = styled.div`
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 20px;
+  margin-bottom: 16px;
+  position: relative;
+`;
+
+const TokenRow = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 12px;
 `;
 
-const TokenSelect = styled.select`
-  background: white;
-  border: 1px solid #d1d5db;
+const TokenButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 0.5rem;
-  font-weight: 500;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #e9ecef;
+  }
 `;
 
-const Balance = styled.span`
-  color: #6b7280;
-  font-size: 0.875rem;
+const TokenLogo = styled.img`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
 `;
 
 const AmountInput = styled.input`
   width: 100%;
-  background: transparent;
+  padding: 16px;
   border: none;
-  font-size: 1.5rem;
+  font-size: 24px;
   font-weight: 600;
-  color: #1f2937;
-  outline: none;
-
+  background: transparent;
+  
+  &:focus {
+    outline: none;
+  }
+  
   &::placeholder {
-    color: #9ca3af;
+    color: #ccc;
   }
 `;
 
-const SwapButton = styled.button`
+const Balance = styled.div`
+  font-size: 14px;
+  color: #666;
+  text-align: right;
+`;
+
+const SwapButton = styled.div`
+  display: flex;
+  justify-content: center;
+  margin: -8px 0;
+  position: relative;
+  z-index: 1;
+`;
+
+const SwapIcon = styled.button`
   width: 40px;
   height: 40px;
-  background: #3b82f6;
-  border: none;
   border-radius: 50%;
+  background: #007bff;
   color: white;
-  font-size: 1.2rem;
+  border: 4px solid white;
   cursor: pointer;
-  margin: 0.5rem auto;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
   transition: all 0.2s;
-
+  
   &:hover {
-    background: #2563eb;
+    background: #0056b3;
     transform: rotate(180deg);
   }
 `;
 
-const SwapInfoCard = styled.div`
-  background: #f3f4f6;
+const SwapDetails = styled.div`
+  background: #f8f9fa;
   border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 16px;
+  margin: 16px 0;
+  font-size: 14px;
 `;
 
-const SwapInfoRow = styled.div`
+const DetailRow = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  color: #6b7280;
+  margin-bottom: 8px;
   
   &:last-child {
     margin-bottom: 0;
@@ -103,194 +127,253 @@ const SwapInfoRow = styled.div`
 
 const ExecuteButton = styled.button`
   width: 100%;
-  background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+  padding: 16px;
+  background: ${props => props.disabled ? '#ccc' : '#007bff'};
   color: white;
   border: none;
-  padding: 1rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
+  border-radius: 8px;
+  font-size: 16px;
   font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 1rem;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(59, 130, 246, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  transition: background-color 0.2s;
+  
+  &:hover {
+    background: ${props => props.disabled ? '#ccc' : '#0056b3'};
   }
 `;
 
-const SwapInterface = ({ dex, account, balance, getBalance }) => {
-  const [tokenIn, setTokenIn] = useState('uatom');
-  const [tokenOut, setTokenOut] = useState('');
+const SwapInterface = ({ dex, balances = {} }) => {
+  const [tokenIn, setTokenIn] = useState(null);
+  const [tokenOut, setTokenOut] = useState(null);
   const [amountIn, setAmountIn] = useState('');
   const [amountOut, setAmountOut] = useState('');
-  const [simulation, setSimulation] = useState(null);
-  const [slippage, setSlippage] = useState(0.5);
-
-  // Mock tokens for demo - in production, fetch from contract or config
-  const tokens = [
-    { denom: 'uatom', symbol: 'ATOM', decimals: 6 },
-    // Add more tokens as they become available
-  ];
+  const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [selectingFor, setSelectingFor] = useState(null);
+  const [swapDetails, setSwapDetails] = useState(null);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const updateSimulation = async () => {
-      if (!amountIn || !tokenIn || !tokenOut || !dex) return;
-      
-      try {
-        const amount = Math.floor(parseFloat(amountIn) * 1000000); // Convert to micro units
-        const sim = await dex.simulateSwap(tokenIn, tokenOut, amount);
-        setSimulation(sim);
-        
-        if (sim) {
-          setAmountOut((parseInt(sim.amount_out) / 1000000).toString());
-        }
-      } catch (error) {
-        console.error('Simulation failed:', error);
-        setSimulation(null);
-        setAmountOut('');
+    // Load tokens including those from user balances
+    const loadTokens = async () => {
+      const tokens = await tokenRegistry.loadTokens(balances);
+      if (tokens.length > 0 && !tokenIn) {
+        const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
+        setTokenIn(atomToken);
       }
     };
+    loadTokens();
+  }, [balances]);
 
-    const debounceTimer = setTimeout(updateSimulation, 500);
-    return () => clearTimeout(debounceTimer);
-  }, [amountIn, tokenIn, tokenOut, dex]);
+  useEffect(() => {
+    if (tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0) {
+      simulateSwap();
+    } else {
+      setAmountOut('');
+      setSwapDetails(null);
+    }
+  }, [tokenIn, tokenOut, amountIn]);
+
+  const simulateSwap = async () => {
+    if (!dex || !tokenIn || !tokenOut || !amountIn) return;
+    
+    try {
+      const simulation = await dex.simulateSwap(
+        tokenIn.denom,
+        tokenOut.denom,
+        (parseFloat(amountIn) * Math.pow(10, tokenIn.decimals)).toString()
+      );
+      
+      const outputAmount = parseFloat(simulation.amount_out) / Math.pow(10, tokenOut.decimals);
+      const fee = parseFloat(simulation.fee) / Math.pow(10, tokenIn.decimals);
+      
+      setAmountOut(outputAmount.toFixed(6));
+      setSwapDetails({
+        fee: fee.toFixed(6),
+        priceImpact: simulation.price_impact,
+        rate: (outputAmount / parseFloat(amountIn)).toFixed(6)
+      });
+    } catch (error) {
+      console.error('Swap simulation failed:', error);
+      setAmountOut('');
+      setSwapDetails(null);
+    }
+  };
+
+  const handleTokenSelect = (token) => {
+    if (selectingFor === 'in') {
+      setTokenIn(token);
+    } else if (selectingFor === 'out') {
+      setTokenOut(token);
+    }
+    setShowTokenSelector(false);
+    setSelectingFor(null);
+  };
 
   const handleSwapTokens = () => {
+    const temp = tokenIn;
     setTokenIn(tokenOut);
-    setTokenOut(tokenIn);
+    setTokenOut(temp);
     setAmountIn(amountOut);
-    setAmountOut(amountIn);
+    setAmountOut('');
   };
 
-  const handleSwap = async () => {
-    if (!amountIn || !tokenIn || !tokenOut || !account) {
-      toast.error('Please fill in all fields');
-      return;
+  const handleMaxClick = () => {
+    if (tokenIn && balances[tokenIn.denom]) {
+      const balance = parseFloat(balances[tokenIn.denom]) / Math.pow(10, tokenIn.decimals);
+      setAmountIn(balance.toString());
     }
+  };
 
+  const executeSwap = async () => {
+    if (!dex || !tokenIn || !tokenOut || !amountIn) return;
+    
+    setLoading(true);
     try {
-      const amountInMicro = Math.floor(parseFloat(amountIn) * 1000000);
-      const minAmountOut = Math.floor(
-        parseFloat(amountOut) * (1 - slippage / 100) * 1000000
-      );
-
-      await dex.swap(tokenIn, tokenOut, amountInMicro, minAmountOut);
+      const amountInWei = (parseFloat(amountIn) * Math.pow(10, tokenIn.decimals)).toString();
+      const minAmountOut = (parseFloat(amountOut) * 0.95 * Math.pow(10, tokenOut.decimals)).toString(); // 5% slippage
       
-      // Refresh balance
-      if (getBalance && account) {
-        await getBalance(account.address);
-      }
+      await dex.swap(tokenIn.denom, tokenOut.denom, amountInWei, minAmountOut);
       
-      // Clear inputs
+      toast.success('Swap executed successfully!');
       setAmountIn('');
       setAmountOut('');
-      setSimulation(null);
+      setSwapDetails(null);
     } catch (error) {
       console.error('Swap failed:', error);
+      toast.error('Swap failed: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const formatBalance = (balance) => {
-    if (!balance) return '0';
-    return (parseInt(balance.amount) / 1000000).toFixed(6);
-  };
-
-  const canSwap = amountIn && tokenIn && tokenOut && simulation && !dex.loading;
+  const canSwap = tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0 && amountOut;
 
   return (
-    <SwapContainer>
-      <Title>Swap Tokens</Title>
-      
-      <TokenInput>
-        <TokenHeader>
-          <TokenSelect 
-            value={tokenIn} 
-            onChange={(e) => setTokenIn(e.target.value)}
-          >
-            {tokens.map(token => (
-              <option key={token.denom} value={token.denom}>
-                {token.symbol}
-              </option>
-            ))}
-          </TokenSelect>
+    <Container>
+      <Title>
+        🔄 Swap Tokens
+      </Title>
+
+      <SwapCard>
+        <TokenRow>
+          <TokenButton onClick={() => {
+            setSelectingFor('in');
+            setShowTokenSelector(true);
+          }}>
+            {tokenIn ? (
+              <>
+                <TokenLogo 
+                  src={tokenIn.logo || '/default-token-logo.svg'} 
+                  alt={tokenIn.symbol}
+                  onError={(e) => {
+                    e.target.src = '/default-token-logo.svg';
+                  }}
+                />
+                {tokenIn.symbol}
+              </>
+            ) : (
+              'Select Token'
+            )}
+          </TokenButton>
           <Balance>
-            Balance: {balance ? formatBalance(balance) : '0'} ATOM
+            Balance: {tokenIn && balances[tokenIn.denom] 
+              ? (parseFloat(balances[tokenIn.denom]) / Math.pow(10, tokenIn.decimals)).toFixed(6)
+              : '0'
+            }
+            {tokenIn && balances[tokenIn.denom] && (
+              <button 
+                onClick={handleMaxClick}
+                style={{ marginLeft: '8px', color: '#007bff', background: 'none', border: 'none', cursor: 'pointer' }}
+              >
+                MAX
+              </button>
+            )}
           </Balance>
-        </TokenHeader>
+        </TokenRow>
         <AmountInput
           type="number"
           placeholder="0.0"
           value={amountIn}
           onChange={(e) => setAmountIn(e.target.value)}
         />
-      </TokenInput>
+      </SwapCard>
 
-      <SwapButton onClick={handleSwapTokens}>
-        ↕️
+      <SwapButton>
+        <SwapIcon onClick={handleSwapTokens}>
+          ↕
+        </SwapIcon>
       </SwapButton>
 
-      <TokenInput>
-        <TokenHeader>
-          <TokenSelect 
-            value={tokenOut} 
-            onChange={(e) => setTokenOut(e.target.value)}
-          >
-            <option value="">Select token</option>
-            {tokens
-              .filter(token => token.denom !== tokenIn)
-              .map(token => (
-                <option key={token.denom} value={token.denom}>
-                  {token.symbol}
-                </option>
-              ))
+      <SwapCard>
+        <TokenRow>
+          <TokenButton onClick={() => {
+            setSelectingFor('out');
+            setShowTokenSelector(true);
+          }}>
+            {tokenOut ? (
+              <>
+                <TokenLogo 
+                  src={tokenOut.logo || '/default-token-logo.svg'} 
+                  alt={tokenOut.symbol}
+                  onError={(e) => {
+                    e.target.src = '/default-token-logo.svg';
+                  }}
+                />
+                {tokenOut.symbol}
+              </>
+            ) : (
+              'Select Token'
+            )}
+          </TokenButton>
+          <Balance>
+            Balance: {tokenOut && balances[tokenOut.denom] 
+              ? (parseFloat(balances[tokenOut.denom]) / Math.pow(10, tokenOut.decimals)).toFixed(6)
+              : '0'
             }
-          </TokenSelect>
-          <Balance>Balance: 0</Balance>
-        </TokenHeader>
+          </Balance>
+        </TokenRow>
         <AmountInput
           type="number"
           placeholder="0.0"
           value={amountOut}
           readOnly
         />
-      </TokenInput>
+      </SwapCard>
 
-      {simulation && (
-        <SwapInfoCard>
-          <SwapInfoRow>
-            <span>Minimum received:</span>
-            <span>{(parseFloat(amountOut) * (1 - slippage / 100)).toFixed(6)}</span>
-          </SwapInfoRow>
-          <SwapInfoRow>
-            <span>Price impact:</span>
-            <span>{simulation.price_impact}</span>
-          </SwapInfoRow>
-          <SwapInfoRow>
-            <span>Liquidity provider fee:</span>
-            <span>{(parseInt(simulation.fee) / 1000000).toFixed(6)} {tokens.find(t => t.denom === tokenIn)?.symbol}</span>
-          </SwapInfoRow>
-          <SwapInfoRow>
-            <span>Slippage tolerance:</span>
-            <span>{slippage}%</span>
-          </SwapInfoRow>
-        </SwapInfoCard>
+      {swapDetails && (
+        <SwapDetails>
+          <DetailRow>
+            <span>Rate:</span>
+            <span>1 {tokenIn.symbol} = {swapDetails.rate} {tokenOut.symbol}</span>
+          </DetailRow>
+          <DetailRow>
+            <span>Fee:</span>
+            <span>{swapDetails.fee} {tokenIn.symbol}</span>
+          </DetailRow>
+          <DetailRow>
+            <span>Price Impact:</span>
+            <span>{swapDetails.priceImpact}</span>
+          </DetailRow>
+        </SwapDetails>
       )}
 
       <ExecuteButton
-        onClick={handleSwap}
-        disabled={!canSwap}
+        disabled={!canSwap || loading}
+        onClick={executeSwap}
       >
-        {dex.loading ? 'Swapping...' : 'Swap'}
+        {loading ? 'Swapping...' : 'Swap'}
       </ExecuteButton>
-    </SwapContainer>
+
+      <TokenSelector
+        isOpen={showTokenSelector}
+        onClose={() => {
+          setShowTokenSelector(false);
+          setSelectingFor(null);
+        }}
+        onSelect={handleTokenSelect}
+        balances={balances}
+      />
+    </Container>
   );
 };
 

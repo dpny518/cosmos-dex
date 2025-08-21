@@ -167,7 +167,7 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
   const loadTokens = async () => {
     setLoading(true);
     try {
-      const allTokens = await tokenRegistry.loadTokens();
+      const allTokens = await tokenRegistry.loadTokens(balances);
       const lpTokens = tokenRegistry.getAllLPTokens();
       setTokens([...allTokens, ...lpTokens]);
     } catch (error) {

@@ -45,27 +45,39 @@ class TokenRegistry {
   }
 
   // Load tokens from cache or fetch fresh
-  async loadTokens() {
+  async loadTokens(balances = null) {
     const cached = this.getCachedTokens();
     
     if (cached && this.isCacheValid(cached.timestamp)) {
       this.tokens = new Map(cached.tokens.map(token => [token.denom, token]));
       this.lastUpdated = cached.timestamp;
-      return cached.tokens;
+    } else {
+      const chainTokens = await this.fetchChainRegistryTokens();
+      const localTokens = this.getLocalTokens();
+      const allTokens = [...chainTokens, ...localTokens];
+
+      // Store in memory
+      this.tokens = new Map(allTokens.map(token => [token.denom, token]));
+      this.lastUpdated = Date.now();
+
+      // Cache for next time
+      this.cacheTokens(allTokens);
     }
 
-    const chainTokens = await this.fetchChainRegistryTokens();
-    const localTokens = this.getLocalTokens();
-    const allTokens = [...chainTokens, ...localTokens];
+    // Add tokens from user balances (IBC tokens not in registry)
+    if (balances) {
+      this.addTokensFromBalances(balances);
+    }
 
-    // Store in memory
-    this.tokens = new Map(allTokens.map(token => [token.denom, token]));
-    this.lastUpdated = Date.now();
+    return Array.from(this.tokens.values());
+  }
 
-    // Cache for next time
-    this.cacheTokens(allTokens);
-
-    return allTokens;
+  // Get local/custom tokens
+  getLocalTokens() {
+    // These could be loaded from a local JSON file or API
+    return [
+      // Add any custom tokens here
+    ];
   }
 
   // Get cached tokens from localStorage
@@ -97,12 +109,83 @@ class TokenRegistry {
     }
   }
 
-  // Get local/custom tokens
-  getLocalTokens() {
-    // These could be loaded from a local JSON file or API
-    return [
-      // Add any custom tokens here
-    ];
+  // Add tokens from user balances (for IBC tokens not in registry)
+  addTokensFromBalances(balances) {
+    if (!balances) return;
+
+    Object.keys(balances).forEach(denom => {
+      if (!this.tokens.has(denom)) {
+        // Check if it's an IBC token
+        if (denom.startsWith('ibc/')) {
+          const token = {
+            denom,
+            symbol: this.generateSymbolFromDenom(denom),
+            name: this.generateNameFromDenom(denom),
+            decimals: 6, // Default for most tokens
+            description: `IBC token ${denom}`,
+            logo: null,
+            coingecko_id: null,
+            native: false,
+            type: 'ibc',
+            traces: [],
+            ibc: {
+              source_channel: 'unknown',
+              source_denom: 'unknown',
+              source_chain: 'unknown'
+            },
+            detected_from_balance: true
+          };
+
+          // Try to identify known IBC tokens
+          this.identifyKnownIBCToken(token);
+          
+          this.tokens.set(denom, token);
+        }
+      }
+    });
+  }
+
+  // Generate a readable symbol from IBC denom
+  generateSymbolFromDenom(denom) {
+    // Known IBC token mappings
+    const knownTokens = {
+      'F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013': 'USDC',
+      // Add more known IBC hashes here
+    };
+
+    const hash = denom.replace('ibc/', '');
+    return knownTokens[hash] || `IBC-${hash.substring(0, 8)}`;
+  }
+
+  // Generate a readable name from IBC denom
+  generateNameFromDenom(denom) {
+    const symbol = this.generateSymbolFromDenom(denom);
+    if (symbol === 'USDC') {
+      return 'USD Coin (via IBC)';
+    }
+    return `IBC Token ${symbol}`;
+  }
+
+  // Identify known IBC tokens and add proper metadata
+  identifyKnownIBCToken(token) {
+    const hash = token.denom.replace('ibc/', '');
+    
+    // USDC from Noble via Osmosis
+    if (hash === 'F663521BF1836B00F5F177680F74BFB9A8B5654A694D0D2BC249E03CF2509013') {
+      token.symbol = 'USDC';
+      token.name = 'USD Coin';
+      token.decimals = 6;
+      token.description = 'USD Coin from Noble chain via IBC';
+      token.logo = 'https://raw.githubusercontent.com/cosmos/chain-registry/master/_non-cosmos/ethereum/images/usdc.svg';
+      token.coingecko_id = 'usd-coin';
+      token.ibc = {
+        source_channel: 'channel-536',
+        source_denom: 'uusdc',
+        source_chain: 'noble'
+      };
+    }
+    
+    // Add more known IBC tokens here as needed
   }
 
   // Get all tokens

@@ -221,16 +221,16 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load default tokens
-    const loadDefaultTokens = async () => {
-      const tokens = await tokenRegistry.loadTokens();
+    // Load tokens including those from user balances
+    const loadTokens = async () => {
+      const tokens = await tokenRegistry.loadTokens(balances);
       if (tokens.length > 0 && !tokenA) {
         const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
         setTokenA(atomToken);
       }
     };
-    loadDefaultTokens();
-  }, []);
+    loadTokens();
+  }, [balances]);
 
   useEffect(() => {
     if (tokenA && tokenB && dex) {
