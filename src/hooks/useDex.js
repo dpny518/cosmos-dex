@@ -92,17 +92,22 @@ export const useDex = (client, account) => {
     if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
       funds.push(coin(amountB.toString(), tokenB));
     }
-    // Note: CW20 tokens are handled by the contract via TransferFrom calls
-
-    console.log('💰 Funds for transaction:', funds);
+    
+    // IMPORTANT: Sort funds by denomination (CosmWasm requirement)
+    funds.sort((a, b) => a.denom.localeCompare(b.denom));
+    
+    console.log('💰 Funds for transaction (sorted):', funds);
 
     try {
       return await executeContract(msg, funds);
     } catch (error) {
-      // Provide more specific error handling for bech32 issues
+      // Provide more specific error handling
       if (error.message.includes('decoding bech32 failed')) {
         toast.error('Smart contract validation error. Please check token addresses and try again.');
         console.error('Bech32 validation error:', error);
+      } else if (error.message.includes('is not sorted')) {
+        toast.error('Transaction formatting error. Please try again.');
+        console.error('Funds sorting error:', error);
       }
       throw error; // Re-throw to let executeContract handle the general error
     }
@@ -127,6 +132,9 @@ export const useDex = (client, account) => {
     if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
       funds.push(coin(amountB.toString(), tokenB));
     }
+    
+    // Sort funds by denomination (CosmWasm requirement)
+    funds.sort((a, b) => a.denom.localeCompare(b.denom));
 
     return await executeContract(msg, funds);
   }, [executeContract]);
@@ -161,6 +169,9 @@ export const useDex = (client, account) => {
     if (tokenIn === 'uatom' || tokenIn.startsWith('ibc/')) {
       funds.push(coin(amountIn.toString(), tokenIn));
     }
+    
+    // Sort funds by denomination (CosmWasm requirement)
+    funds.sort((a, b) => a.denom.localeCompare(b.denom));
 
     return await executeContract(msg, funds);
   }, [executeContract]);

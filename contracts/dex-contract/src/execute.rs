@@ -64,6 +64,16 @@ pub fn execute_create_pool(
     };
     LIQUIDITY.save(deps.storage, liquidity_key, &liquidity_position)?;
 
+    // Validate token addresses before processing
+    if !token_a.starts_with("ibc/") && token_a != "uatom" {
+        // For CW20 tokens, validate the address format
+        deps.api.addr_validate(&token_a)?;
+    }
+    if !token_b.starts_with("ibc/") && token_b != "uatom" {
+        // For CW20 tokens, validate the address format  
+        deps.api.addr_validate(&token_b)?;
+    }
+
     // Transfer tokens from user to contract
     let mut messages = vec![];
     
