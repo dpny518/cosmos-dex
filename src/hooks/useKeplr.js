@@ -69,6 +69,23 @@ export const useKeplr = () => {
     }
   }, [client]);
 
+  const getAllBalances = useCallback(async (address) => {
+    if (!client) return {};
+    
+    try {
+      const balances = await client.getAllBalances(address);
+      // Convert to object with denom as key and amount as value
+      const balanceMap = {};
+      balances.forEach(balance => {
+        balanceMap[balance.denom] = balance.amount;
+      });
+      return balanceMap;
+    } catch (error) {
+      console.error('Failed to get all balances:', error);
+      return {};
+    }
+  }, [client]);
+
   // Auto-connect on page load if previously connected
   useEffect(() => {
     const autoConnect = async () => {
@@ -112,6 +129,7 @@ export const useKeplr = () => {
     connectWallet,
     disconnectWallet,
     getBalance,
+    getAllBalances,
     isConnected: !!account
   };
 };

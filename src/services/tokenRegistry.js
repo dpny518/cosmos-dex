@@ -113,10 +113,16 @@ class TokenRegistry {
   addTokensFromBalances(balances) {
     if (!balances) return;
 
+    console.log('🔍 Scanning balances for IBC tokens:', balances);
+
     Object.keys(balances).forEach(denom => {
       if (!this.tokens.has(denom)) {
+        console.log('🆕 Found new token in balance:', denom);
+        
         // Check if it's an IBC token
         if (denom.startsWith('ibc/')) {
+          console.log('🌉 Detected IBC token:', denom);
+          
           const token = {
             denom,
             symbol: this.generateSymbolFromDenom(denom),
@@ -139,10 +145,13 @@ class TokenRegistry {
           // Try to identify known IBC tokens
           this.identifyKnownIBCToken(token);
           
+          console.log('✅ Added IBC token:', token);
           this.tokens.set(denom, token);
         }
       }
     });
+
+    console.log('📊 Total tokens after balance scan:', this.tokens.size);
   }
 
   // Generate a readable symbol from IBC denom

@@ -155,7 +155,10 @@ const SwapInterface = ({ dex, balances = {} }) => {
   useEffect(() => {
     // Load tokens including those from user balances
     const loadTokens = async () => {
+      console.log('🔄 SwapInterface: Loading tokens with balances:', balances);
       const tokens = await tokenRegistry.loadTokens(balances);
+      console.log('📋 SwapInterface: Loaded tokens:', tokens.length);
+      
       if (tokens.length > 0 && !tokenIn) {
         const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
         setTokenIn(atomToken);

@@ -137,25 +137,35 @@ const ContractInfo = styled.div`
 `;
 
 function App() {
-  const { account, client, isConnecting, connectWallet, disconnectWallet, isConnected, getBalance } = useKeplr();
+  const { account, client, isConnecting, connectWallet, disconnectWallet, isConnected, getBalance, getAllBalances } = useKeplr();
   const dex = useDex(client, account);
   const [balance, setBalance] = useState(null);
+  const [allBalances, setAllBalances] = useState({});
 
   useEffect(() => {
-    const fetchBalance = async () => {
-      if (account && getBalance) {
-        const bal = await getBalance(account.address);
-        setBalance(bal);
+    const fetchBalances = async () => {
+      if (account && getBalance && getAllBalances) {
+        // Get ATOM balance for display
+        const atomBalance = await getBalance(account.address);
+        setBalance(atomBalance);
+        
+        // Get all balances for token detection
+        const balances = await getAllBalances(account.address);
+        setAllBalances(balances);
       }
     };
 
-    fetchBalance();
-  }, [account, getBalance]);
+    fetchBalances();
+  }, [account, getBalance, getAllBalances]);
 
   const handleGetBalance = async (address) => {
-    const bal = await getBalance(address);
-    setBalance(bal);
-    return bal;
+    const atomBalance = await getBalance(address);
+    setBalance(atomBalance);
+    
+    const balances = await getAllBalances(address);
+    setAllBalances(balances);
+    
+    return atomBalance;
   };
 
   return (
@@ -257,18 +267,14 @@ function App() {
             <Route path="/swap" element={
               <SwapInterface 
                 dex={dex} 
-                account={account} 
-                balance={balance}
-                getBalance={handleGetBalance}
+                balances={allBalances}
               />
             } />
             
             <Route path="/liquidity" element={
               <LiquidityInterface 
                 dex={dex} 
-                account={account} 
-                balance={balance}
-                getBalance={handleGetBalance}
+                balances={allBalances}
               />
             } />
             
