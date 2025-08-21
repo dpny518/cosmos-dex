@@ -1,19 +1,21 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import toast from 'react-hot-toast';
+import { toast } from 'react-hot-toast';
+import TokenSelector from './TokenSelector';
+import { tokenRegistry } from '../services/tokenRegistry';
 
-const LiquidityContainer = styled.div`
+const Container = styled.div`
   background: white;
-  border-radius: 16px;
-  padding: 2rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
-  max-width: 500px;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  max-width: 600px;
   margin: 0 auto;
 `;
 
 const TabContainer = styled.div`
   display: flex;
-  margin-bottom: 2rem;
+  margin-bottom: 24px;
   background: #f3f4f6;
   border-radius: 12px;
   padding: 4px;
@@ -21,7 +23,7 @@ const TabContainer = styled.div`
 
 const Tab = styled.button`
   flex: 1;
-  padding: 0.75rem;
+  padding: 12px;
   border: none;
   border-radius: 8px;
   background: ${props => props.active ? 'white' : 'transparent'};
@@ -29,31 +31,37 @@ const Tab = styled.button`
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s;
-  box-shadow: ${props => props.active ? '0 2px 4px rgba(0,0,0,0.1)' : 'none'};
+  
+  &:hover {
+    color: #1f2937;
+  }
 `;
 
-const Title = styled.h2`
-  color: #1f2937;
-  margin-bottom: 1.5rem;
-  text-align: center;
+const Title = styled.h3`
+  margin: 0 0 20px 0;
+  color: #333;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 `;
 
 const TokenPairContainer = styled.div`
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  gap: 16px;
+  align-items: center;
+  margin-bottom: 24px;
 `;
 
-const TokenInput = styled.div`
-  flex: 1;
-  background: #f9fafb;
-  border: 2px solid #e5e7eb;
+const TokenInputCard = styled.div`
+  border: 2px solid #e0e0e0;
   border-radius: 12px;
-  padding: 1rem;
+  padding: 16px;
+  background: white;
   transition: border-color 0.2s;
-
+  
   &:focus-within {
-    border-color: #3b82f6;
+    border-color: #007bff;
   }
 `;
 
@@ -61,262 +69,362 @@ const TokenHeader = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 0.5rem;
+  margin-bottom: 12px;
 `;
 
-const TokenSelect = styled.select`
-  background: white;
-  border: 1px solid #d1d5db;
+const TokenButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  border: 1px solid #e0e0e0;
   border-radius: 8px;
-  padding: 0.5rem;
-  font-weight: 500;
+  padding: 8px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    background: #e9ecef;
+  }
+`;
+
+const TokenLogo = styled.img`
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+`;
+
+const Balance = styled.div`
+  font-size: 14px;
+  color: #666;
+  text-align: right;
 `;
 
 const AmountInput = styled.input`
   width: 100%;
-  background: transparent;
+  padding: 12px 0;
   border: none;
-  font-size: 1.2rem;
+  font-size: 18px;
   font-weight: 600;
-  color: #1f2937;
-  outline: none;
-
+  background: transparent;
+  
+  &:focus {
+    outline: none;
+  }
+  
   &::placeholder {
-    color: #9ca3af;
+    color: #ccc;
   }
 `;
 
-const InfoCard = styled.div`
-  background: #f3f4f6;
+const PlusIcon = styled.div`
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  color: #666;
+`;
+
+const PoolInfo = styled.div`
+  background: #f8f9fa;
   border-radius: 8px;
-  padding: 1rem;
-  margin: 1rem 0;
+  padding: 16px;
+  margin: 16px 0;
+  font-size: 14px;
 `;
 
 const InfoRow = styled.div`
   display: flex;
   justify-content: space-between;
-  margin-bottom: 0.5rem;
-  color: #6b7280;
+  margin-bottom: 8px;
   
   &:last-child {
     margin-bottom: 0;
-    color: #1f2937;
-    font-weight: 600;
   }
 `;
 
-const ExecuteButton = styled.button`
+const ActionButton = styled.button`
   width: 100%;
-  background: linear-gradient(135deg, #10b981, #047857);
+  padding: 16px;
+  background: ${props => props.disabled ? '#ccc' : '#007bff'};
   color: white;
   border: none;
-  padding: 1rem;
-  border-radius: 12px;
-  font-size: 1.1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 1rem;
-
-  &:hover:not(:disabled) {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4);
-  }
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-    transform: none;
-  }
-`;
-
-const UserPositions = styled.div`
-  margin-top: 2rem;
-  padding-top: 2rem;
-  border-top: 1px solid #e5e7eb;
-`;
-
-const PositionCard = styled.div`
-  background: #f9fafb;
   border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
-  border: 1px solid #e5e7eb;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: ${props => props.disabled ? 'not-allowed' : 'pointer'};
+  transition: background-color 0.2s;
+  margin-top: 16px;
+  
+  &:hover {
+    background: ${props => props.disabled ? '#ccc' : '#0056b3'};
+  }
 `;
 
-const LiquidityInterface = ({ dex, account, balance, getBalance }) => {
+const LiquidityList = styled.div`
+  margin-top: 24px;
+`;
+
+const LiquidityItem = styled.div`
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+`;
+
+const LiquidityInfo = styled.div`
+  flex: 1;
+`;
+
+const LiquidityPair = styled.div`
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+`;
+
+const LiquidityAmount = styled.div`
+  font-size: 14px;
+  color: #666;
+`;
+
+const RemoveButton = styled.button`
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  cursor: pointer;
+  font-size: 14px;
+  
+  &:hover {
+    background: #c82333;
+  }
+`;
+
+const LiquidityInterface = ({ dex, balances = {} }) => {
   const [activeTab, setActiveTab] = useState('add');
-  const [tokenA, setTokenA] = useState('uatom');
-  const [tokenB, setTokenB] = useState('');
+  const [tokenA, setTokenA] = useState(null);
+  const [tokenB, setTokenB] = useState(null);
   const [amountA, setAmountA] = useState('');
   const [amountB, setAmountB] = useState('');
-  const [pool, setPool] = useState(null);
-  const [userLiquidity, setUserLiquidity] = useState(null);
-
-  // Mock tokens
-  const tokens = [
-    { denom: 'uatom', symbol: 'ATOM', decimals: 6 },
-    // Add more tokens as needed
-  ];
+  const [showTokenSelector, setShowTokenSelector] = useState(false);
+  const [selectingFor, setSelectingFor] = useState(null);
+  const [poolInfo, setPoolInfo] = useState(null);
+  const [userLiquidity, setUserLiquidity] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const fetchPoolInfo = async () => {
-      if (!tokenA || !tokenB || !dex) return;
-      
-      try {
-        const poolInfo = await dex.getPool(tokenA, tokenB);
-        setPool(poolInfo);
-      } catch (error) {
-        console.error('Failed to fetch pool info:', error);
-        setPool(null);
+    // Load default tokens
+    const loadDefaultTokens = async () => {
+      const tokens = await tokenRegistry.loadTokens();
+      if (tokens.length > 0 && !tokenA) {
+        const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
+        setTokenA(atomToken);
       }
     };
+    loadDefaultTokens();
+  }, []);
 
-    fetchPoolInfo();
+  useEffect(() => {
+    if (tokenA && tokenB && dex) {
+      loadPoolInfo();
+    }
   }, [tokenA, tokenB, dex]);
 
-  useEffect(() => {
-    const fetchUserLiquidity = async () => {
-      if (!tokenA || !tokenB || !account || !dex) return;
-      
-      try {
-        const liquidity = await dex.getUserLiquidity(account.address, tokenA, tokenB);
-        setUserLiquidity(liquidity);
-      } catch (error) {
-        console.error('Failed to fetch user liquidity:', error);
-        setUserLiquidity(null);
-      }
-    };
-
-    fetchUserLiquidity();
-  }, [tokenA, tokenB, account, dex]);
-
-  const handleAddLiquidity = async () => {
-    if (!amountA || !amountB || !tokenA || !tokenB || !account) {
-      toast.error('Please fill in all fields');
-      return;
-    }
-
+  const loadPoolInfo = async () => {
+    if (!dex || !tokenA || !tokenB) return;
+    
     try {
-      const amountAMicro = Math.floor(parseFloat(amountA) * 1000000);
-      const amountBMicro = Math.floor(parseFloat(amountB) * 1000000);
-      const minLiquidity = 1; // Minimum liquidity tokens
+      const pool = await dex.getPool(tokenA.denom, tokenB.denom);
+      setPoolInfo(pool);
+    } catch (error) {
+      console.error('Failed to load pool info:', error);
+      setPoolInfo(null);
+    }
+  };
 
-      if (!pool) {
-        // Create new pool
-        await dex.createPool(tokenA, tokenB, amountAMicro, amountBMicro);
+  const handleTokenSelect = (token) => {
+    if (selectingFor === 'A') {
+      setTokenA(token);
+    } else if (selectingFor === 'B') {
+      setTokenB(token);
+    }
+    setShowTokenSelector(false);
+    setSelectingFor(null);
+  };
+
+  const handleMaxClick = (tokenType) => {
+    const token = tokenType === 'A' ? tokenA : tokenB;
+    if (token && balances[token.denom]) {
+      const balance = parseFloat(balances[token.denom]) / Math.pow(10, token.decimals);
+      if (tokenType === 'A') {
+        setAmountA(balance.toString());
       } else {
-        // Add to existing pool
-        await dex.addLiquidity(tokenA, tokenB, amountAMicro, amountBMicro, minLiquidity);
+        setAmountB(balance.toString());
       }
+    }
+  };
 
-      // Refresh data
-      if (getBalance && account) {
-        await getBalance(account.address);
-      }
+  const addLiquidity = async () => {
+    if (!dex || !tokenA || !tokenB || !amountA || !amountB) return;
+    
+    setLoading(true);
+    try {
+      const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
+      const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
+      const minLiquidity = '1000'; // Minimum LP tokens to receive
       
+      await dex.addLiquidity(tokenA.denom, tokenB.denom, amountAWei, amountBWei, minLiquidity);
+      
+      toast.success('Liquidity added successfully!');
       setAmountA('');
       setAmountB('');
+      loadPoolInfo();
     } catch (error) {
       console.error('Add liquidity failed:', error);
+      toast.error('Add liquidity failed: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleRemoveLiquidity = async () => {
-    if (!userLiquidity || !userLiquidity.liquidity || userLiquidity.liquidity === '0') {
-      toast.error('No liquidity to remove');
-      return;
-    }
-
+  const createPool = async () => {
+    if (!dex || !tokenA || !tokenB || !amountA || !amountB) return;
+    
+    setLoading(true);
     try {
-      const liquidityAmount = userLiquidity.liquidity;
-      const minA = Math.floor(parseInt(userLiquidity.share_a) * 0.99); // 1% slippage
-      const minB = Math.floor(parseInt(userLiquidity.share_b) * 0.99);
-
-      await dex.removeLiquidity(tokenA, tokenB, liquidityAmount, minA, minB);
-
-      // Refresh data
-      if (getBalance && account) {
-        await getBalance(account.address);
-      }
+      const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
+      const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
+      
+      await dex.createPool(tokenA.denom, tokenB.denom, amountAWei, amountBWei);
+      
+      toast.success('Pool created successfully!');
+      setAmountA('');
+      setAmountB('');
+      loadPoolInfo();
     } catch (error) {
-      console.error('Remove liquidity failed:', error);
+      console.error('Create pool failed:', error);
+      toast.error('Create pool failed: ' + error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const calculateRatio = () => {
-    if (!pool || !amountA) return '';
-    const ratio = parseInt(pool.reserve_b) / parseInt(pool.reserve_a);
-    return (parseFloat(amountA) * ratio).toFixed(6);
-  };
-
-  const formatBalance = (balance) => {
-    if (!balance) return '0';
-    return (parseInt(balance.amount) / 1000000).toFixed(6);
-  };
-
-  const canAddLiquidity = amountA && amountB && tokenA && tokenB && !dex.loading;
-  const canRemoveLiquidity = userLiquidity && parseInt(userLiquidity.liquidity) > 0 && !dex.loading;
+  const canAddLiquidity = tokenA && tokenB && amountA && amountB && parseFloat(amountA) > 0 && parseFloat(amountB) > 0;
+  const poolExists = poolInfo && poolInfo.reserve_a && poolInfo.reserve_b;
 
   return (
-    <LiquidityContainer>
+    <Container>
       <TabContainer>
-        <Tab active={activeTab === 'add'} onClick={() => setActiveTab('add')}>
+        <Tab 
+          active={activeTab === 'add'} 
+          onClick={() => setActiveTab('add')}
+        >
           Add Liquidity
         </Tab>
-        <Tab active={activeTab === 'remove'} onClick={() => setActiveTab('remove')}>
+        <Tab 
+          active={activeTab === 'remove'} 
+          onClick={() => setActiveTab('remove')}
+        >
           Remove Liquidity
         </Tab>
       </TabContainer>
 
       {activeTab === 'add' && (
         <>
-          <Title>Add Liquidity</Title>
-          
+          <Title>
+            💧 Add Liquidity
+          </Title>
+
           <TokenPairContainer>
-            <TokenInput>
+            <TokenInputCard>
               <TokenHeader>
-                <TokenSelect 
-                  value={tokenA} 
-                  onChange={(e) => setTokenA(e.target.value)}
-                >
-                  {tokens.map(token => (
-                    <option key={token.denom} value={token.denom}>
-                      {token.symbol}
-                    </option>
-                  ))}
-                </TokenSelect>
+                <TokenButton onClick={() => {
+                  setSelectingFor('A');
+                  setShowTokenSelector(true);
+                }}>
+                  {tokenA ? (
+                    <>
+                      <TokenLogo 
+                        src={tokenA.logo || '/default-token-logo.svg'} 
+                        alt={tokenA.symbol}
+                        onError={(e) => {
+                          e.target.src = '/default-token-logo.svg';
+                        }}
+                      />
+                      {tokenA.symbol}
+                    </>
+                  ) : (
+                    'Select Token A'
+                  )}
+                </TokenButton>
+                <Balance>
+                  Balance: {tokenA && balances[tokenA.denom] 
+                    ? (parseFloat(balances[tokenA.denom]) / Math.pow(10, tokenA.decimals)).toFixed(6)
+                    : '0'
+                  }
+                  {tokenA && balances[tokenA.denom] && (
+                    <button 
+                      onClick={() => handleMaxClick('A')}
+                      style={{ marginLeft: '8px', color: '#007bff', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      MAX
+                    </button>
+                  )}
+                </Balance>
               </TokenHeader>
               <AmountInput
                 type="number"
                 placeholder="0.0"
                 value={amountA}
-                onChange={(e) => {
-                  setAmountA(e.target.value);
-                  if (pool && e.target.value) {
-                    setAmountB(calculateRatio());
-                  }
-                }}
+                onChange={(e) => setAmountA(e.target.value)}
               />
-            </TokenInput>
+            </TokenInputCard>
 
-            <TokenInput>
+            <PlusIcon>+</PlusIcon>
+
+            <TokenInputCard>
               <TokenHeader>
-                <TokenSelect 
-                  value={tokenB} 
-                  onChange={(e) => setTokenB(e.target.value)}
-                >
-                  <option value="">Select token</option>
-                  {tokens
-                    .filter(token => token.denom !== tokenA)
-                    .map(token => (
-                      <option key={token.denom} value={token.denom}>
-                        {token.symbol}
-                      </option>
-                    ))
+                <TokenButton onClick={() => {
+                  setSelectingFor('B');
+                  setShowTokenSelector(true);
+                }}>
+                  {tokenB ? (
+                    <>
+                      <TokenLogo 
+                        src={tokenB.logo || '/default-token-logo.svg'} 
+                        alt={tokenB.symbol}
+                        onError={(e) => {
+                          e.target.src = '/default-token-logo.svg';
+                        }}
+                      />
+                      {tokenB.symbol}
+                    </>
+                  ) : (
+                    'Select Token B'
+                  )}
+                </TokenButton>
+                <Balance>
+                  Balance: {tokenB && balances[tokenB.denom] 
+                    ? (parseFloat(balances[tokenB.denom]) / Math.pow(10, tokenB.decimals)).toFixed(6)
+                    : '0'
                   }
-                </TokenSelect>
+                  {tokenB && balances[tokenB.denom] && (
+                    <button 
+                      onClick={() => handleMaxClick('B')}
+                      style={{ marginLeft: '8px', color: '#007bff', background: 'none', border: 'none', cursor: 'pointer' }}
+                    >
+                      MAX
+                    </button>
+                  )}
+                </Balance>
               </TokenHeader>
               <AmountInput
                 type="number"
@@ -324,73 +432,81 @@ const LiquidityInterface = ({ dex, account, balance, getBalance }) => {
                 value={amountB}
                 onChange={(e) => setAmountB(e.target.value)}
               />
-            </TokenInput>
+            </TokenInputCard>
           </TokenPairContainer>
 
-          {pool && (
-            <InfoCard>
+          {poolInfo && (
+            <PoolInfo>
               <InfoRow>
-                <span>Pool reserves:</span>
-                <span>{(parseInt(pool.reserve_a) / 1000000).toFixed(2)} / {(parseInt(pool.reserve_b) / 1000000).toFixed(2)}</span>
+                <span>Pool exists:</span>
+                <span>{poolExists ? 'Yes' : 'No'}</span>
               </InfoRow>
-              <InfoRow>
-                <span>Pool ratio:</span>
-                <span>1 {tokens.find(t => t.denom === tokenA)?.symbol} = {(parseInt(pool.reserve_b) / parseInt(pool.reserve_a)).toFixed(6)} {tokens.find(t => t.denom === tokenB)?.symbol}</span>
-              </InfoRow>
-              <InfoRow>
-                <span>Total liquidity:</span>
-                <span>{(parseInt(pool.total_liquidity) / 1000000).toFixed(2)}</span>
-              </InfoRow>
-            </InfoCard>
+              {poolExists && (
+                <>
+                  <InfoRow>
+                    <span>{tokenA?.symbol} Reserve:</span>
+                    <span>{(parseFloat(poolInfo.reserve_a) / Math.pow(10, tokenA?.decimals || 6)).toFixed(6)}</span>
+                  </InfoRow>
+                  <InfoRow>
+                    <span>{tokenB?.symbol} Reserve:</span>
+                    <span>{(parseFloat(poolInfo.reserve_b) / Math.pow(10, tokenB?.decimals || 6)).toFixed(6)}</span>
+                  </InfoRow>
+                  <InfoRow>
+                    <span>Total Liquidity:</span>
+                    <span>{(parseFloat(poolInfo.total_liquidity) / Math.pow(10, 6)).toFixed(6)}</span>
+                  </InfoRow>
+                </>
+              )}
+            </PoolInfo>
           )}
 
-          <ExecuteButton
-            onClick={handleAddLiquidity}
-            disabled={!canAddLiquidity}
+          <ActionButton
+            disabled={!canAddLiquidity || loading}
+            onClick={poolExists ? addLiquidity : createPool}
           >
-            {dex.loading ? 'Adding...' : pool ? 'Add Liquidity' : 'Create Pool'}
-          </ExecuteButton>
+            {loading ? 'Processing...' : poolExists ? 'Add Liquidity' : 'Create Pool'}
+          </ActionButton>
         </>
       )}
 
       {activeTab === 'remove' && (
         <>
-          <Title>Remove Liquidity</Title>
+          <Title>
+            🔥 Remove Liquidity
+          </Title>
           
-          {userLiquidity && parseInt(userLiquidity.liquidity) > 0 ? (
-            <>
-              <InfoCard>
-                <InfoRow>
-                  <span>Your liquidity tokens:</span>
-                  <span>{(parseInt(userLiquidity.liquidity) / 1000000).toFixed(6)}</span>
-                </InfoRow>
-                <InfoRow>
-                  <span>Your share of {tokens.find(t => t.denom === tokenA)?.symbol}:</span>
-                  <span>{(parseInt(userLiquidity.share_a) / 1000000).toFixed(6)}</span>
-                </InfoRow>
-                <InfoRow>
-                  <span>Your share of {tokens.find(t => t.denom === tokenB)?.symbol}:</span>
-                  <span>{(parseInt(userLiquidity.share_b) / 1000000).toFixed(6)}</span>
-                </InfoRow>
-              </InfoCard>
-
-              <ExecuteButton
-                onClick={handleRemoveLiquidity}
-                disabled={!canRemoveLiquidity}
-              >
-                {dex.loading ? 'Removing...' : 'Remove All Liquidity'}
-              </ExecuteButton>
-            </>
-          ) : (
-            <InfoCard>
-              <div style={{ textAlign: 'center', color: '#6b7280' }}>
-                No liquidity positions found for this pair.
+          <LiquidityList>
+            {userLiquidity.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+                No liquidity positions found
               </div>
-            </InfoCard>
-          )}
+            ) : (
+              userLiquidity.map((position, index) => (
+                <LiquidityItem key={index}>
+                  <LiquidityInfo>
+                    <LiquidityPair>{position.pair}</LiquidityPair>
+                    <LiquidityAmount>Liquidity: {position.amount}</LiquidityAmount>
+                  </LiquidityInfo>
+                  <RemoveButton>
+                    Remove
+                  </RemoveButton>
+                </LiquidityItem>
+              ))
+            )}
+          </LiquidityList>
         </>
       )}
-    </LiquidityContainer>
+
+      <TokenSelector
+        isOpen={showTokenSelector}
+        onClose={() => {
+          setShowTokenSelector(false);
+          setSelectingFor(null);
+        }}
+        onSelect={handleTokenSelect}
+        balances={balances}
+      />
+    </Container>
   );
 };
 
