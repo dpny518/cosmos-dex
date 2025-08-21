@@ -8,6 +8,7 @@ import { useDex } from './hooks/useDex.js';
 import Header from './components/Header.jsx';
 import SwapInterface from './components/SwapInterface.jsx';
 import LiquidityInterface from './components/LiquidityInterface.jsx';
+import LPTokenGenerator from './components/LPTokenGenerator.jsx';
 import { config } from './config';
 
 const GlobalStyle = createGlobalStyle`
@@ -189,6 +190,9 @@ function App() {
             <NavButton to="/liquidity">
               Liquidity
             </NavButton>
+            <NavButton to="/generator">
+              LP Generator
+            </NavButton>
           </NavContainer>
         </Navigation>
 
@@ -265,6 +269,15 @@ function App() {
                 account={account} 
                 balance={balance}
                 getBalance={handleGetBalance}
+              />
+            } />
+            
+            <Route path="/generator" element={
+              <LPTokenGenerator 
+                onCreatePool={(pair) => {
+                  // Handle pool creation from generator
+                  console.log('Creating pool for pair:', pair);
+                }}
               />
             } />
           </Routes>

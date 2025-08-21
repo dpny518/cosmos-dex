@@ -1,0 +1,24 @@
+{
+  "contract_address": "cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez",
+  "pairs": [
+    {
+      "id": "example-pair",
+      "tokenA": "uatom",
+      "tokenB": "ibc/example",
+      "lpToken": "lp-uatom-ibc/example",
+      "created": 1692614400000,
+      "status": "active"
+    }
+  ],
+  "lp_tokens": [
+    {
+      "denom": "lp-uatom-ibc/example",
+      "symbol": "ATOM-EXAMPLE LP",
+      "name": "Atom - Example Liquidity Pool",
+      "decimals": 6,
+      "type": "lp",
+      "pair_id": "example-pair"
+    }
+  ],
+  "last_updated": 1692614400000
+}
