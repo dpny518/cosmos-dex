@@ -152,11 +152,21 @@ function App() {
         // Get all balances for token detection
         const balances = await getAllBalances(account.address);
         setAllBalances(balances);
+        
+        // Update LP token balances if we have a client
+        if (client && contractAddress) {
+          try {
+            await tokenRegistry.updateLPTokenBalances(client, contractAddress, account.address);
+            console.log('✅ LP token balances updated');
+          } catch (error) {
+            console.error('❌ Error updating LP token balances:', error);
+          }
+        }
       }
     };
 
     fetchBalances();
-  }, [account, getBalance, getAllBalances]);
+  }, [account, getBalance, getAllBalances, client, contractAddress]);
 
   const handleGetBalance = async (address) => {
     const atomBalance = await getBalance(address);

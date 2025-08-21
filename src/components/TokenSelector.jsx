@@ -181,18 +181,20 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
     setLoading(true);
     try {
       console.log('🔄 TokenSelector: Loading tokens with balances:', balances);
-      const allTokens = await tokenRegistry.loadTokens(balances);
-      const lpTokens = tokenRegistry.getAllLPTokens();
-      const combinedTokens = [...allTokens, ...lpTokens];
+      await tokenRegistry.loadTokens(balances);
       
-      console.log('📋 TokenSelector: All tokens loaded:', combinedTokens.length);
-      console.log('🔍 TokenSelector: Token list:', combinedTokens.map(t => ({
+      // Get all tokens including LP tokens with balances
+      const allTokens = tokenRegistry.getAllTokensWithLP();
+      
+      console.log('📋 TokenSelector: All tokens loaded:', allTokens.length);
+      console.log('🔍 TokenSelector: Token list:', allTokens.map(t => ({
         symbol: t.symbol,
         denom: t.denom,
-        type: t.type
+        type: t.type,
+        balance: t.balance
       })));
       
-      setTokens(combinedTokens);
+      setTokens(allTokens);
     } catch (error) {
       console.error('Failed to load tokens:', error);
     } finally {
@@ -336,16 +338,21 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
                             onClick={() => handleTokenSelect(token)}
                           >
                             <TokenLogo
-                              src={token.logo || '/default-token-logo.svg'}
+                              src={token.logo || (token.type === 'lp' ? '🏊' : '/default-token-logo.svg')}
                               alt={token.symbol}
                               onError={(e) => {
-                                e.target.src = '/default-token-logo.svg';
+                                e.target.src = token.type === 'lp' ? '🏊' : '/default-token-logo.svg';
                               }}
                             />
                             <TokenInfo>
-                              <TokenSymbol>{token.symbol}</TokenSymbol>
+                              <TokenSymbol>
+                                {token.type === 'lp' && '🏊 '}
+                                {token.symbol}
+                              </TokenSymbol>
                               <TokenName>{token.name}</TokenName>
-                              <TokenDenom>{token.denom}</TokenDenom>
+                              <TokenDenom>
+                                {token.type === 'lp' ? 'LP Token' : token.denom}
+                              </TokenDenom>
                             </TokenInfo>
                             <TokenBalance>
                               {formatBalance(balance, token.decimals)}
