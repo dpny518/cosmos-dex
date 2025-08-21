@@ -52,28 +52,20 @@ Your Cosmos DEX has been successfully deployed to Cosmos Hub mainnet and is read
    ```
 
 4. **Add Environment Variables**
-   Copy these exact values to Cloudflare Pages environment variables:
+   Only these essential variables are needed (Keplr provides the rest):
    ```
-   REACT_APP_CHAIN_ID=cosmoshub-4
-   REACT_APP_CHAIN_NAME=Cosmos Hub
-   REACT_APP_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
-   REACT_APP_REST_ENDPOINT=https://cosmos-rest.polkachu.com
    REACT_APP_CONTRACT_ADDRESS=cosmos1svd8fpfwrf237qprqt33ajylg302s05neruqt37p3ju2qktkt6wqytq4ez
    REACT_APP_CODE_ID=250
-   REACT_APP_DENOM=uatom
-   REACT_APP_COIN_DECIMALS=6
-   REACT_APP_COIN_MINIMAL_DENOM=uatom
-   REACT_APP_COIN_DISPLAY_NAME=ATOM
-   REACT_APP_GAS_PRICES=0.025uatom
-   REACT_APP_GAS_ADJUSTMENT=1.3
    REACT_APP_APP_NAME=Cosmos DEX
    REACT_APP_APP_VERSION=1.0.0
-   REACT_APP_ENVIRONMENT=production
-   REACT_APP_COINGECKO_API=https://api.coingecko.com/api/v3
-   REACT_APP_MINTSCAN_API=https://api.mintscan.io/v1/cosmos
-   REACT_APP_ENABLE_ANALYTICS=true
-   REACT_APP_ENABLE_NOTIFICATIONS=true
-   REACT_APP_ENABLE_DARK_MODE=true
+   ```
+
+   Optional overrides (only if you want custom endpoints):
+   ```
+   REACT_APP_RPC_ENDPOINT=https://cosmos-rpc.polkachu.com
+   REACT_APP_REST_ENDPOINT=https://cosmos-rest.polkachu.com
+   REACT_APP_GAS_PRICES=0.025uatom
+   REACT_APP_GAS_ADJUSTMENT=1.3
    ```
 
 5. **Deploy**
