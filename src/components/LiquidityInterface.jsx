@@ -344,14 +344,14 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
           </Title>
           
           <div style={{ 
-            background: '#fff3cd', 
-            border: '1px solid #ffeaa7', 
+            background: '#d1ecf1', 
+            border: '1px solid #bee5eb', 
             borderRadius: '8px', 
             padding: '12px', 
             marginBottom: '20px',
-            color: '#856404'
+            color: '#0c5460'
           }}>
-            ⚠️ <strong>Current Limitation:</strong> The deployed contract currently supports native ATOM and CW20 tokens only. An updated contract with full IBC token support is ready and will be deployed soon.
+            🎉 <strong>New!</strong> This DEX now supports native tokens (ATOM), IBC tokens (like USDC), and CW20 tokens. Create pools with any supported token combination!
           </div>
 
           <TokenPairContainer>
