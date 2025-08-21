@@ -344,6 +344,82 @@ class TokenRegistry {
     return this.pairs.get(pairId);
   }
 
+  // Update LP tokens with user balances from contract
+  async updateLPTokenBalances(client, contractAddress, userAddress) {
+    if (!client || !contractAddress || !userAddress) {
+      console.log('⚠️ Missing parameters for LP token balance update');
+      return;
+    }
+
+    console.log('🏊 Updating LP token balances for user:', userAddress);
+    
+    try {
+      // Get all pools from contract
+      const poolsResponse = await client.queryContractSmart(contractAddress, {
+        pools: { limit: 100 }
+      });
+      
+      console.log('📊 Found pools in contract:', poolsResponse.pools?.length || 0);
+      
+      // For each pool, check if user has liquidity
+      for (const pool of poolsResponse.pools || []) {
+        try {
+          const liquidityResponse = await client.queryContractSmart(contractAddress, {
+            liquidity: {
+              user: userAddress,
+              token_a: pool.token_a,
+              token_b: pool.token_b
+            }
+          });
+          
+          console.log(`🔍 Liquidity in ${pool.token_a}/${pool.token_b}:`, liquidityResponse);
+          
+          // If user has liquidity, create/update LP token
+          if (liquidityResponse.liquidity && liquidityResponse.liquidity !== '0') {
+            const tokenA = this.getToken(pool.token_a);
+            const tokenB = this.getToken(pool.token_b);
+            
+            if (tokenA && tokenB) {
+              // Create or get existing LP token
+              let lpToken = this.getLPToken(tokenA, tokenB);
+              if (!lpToken) {
+                lpToken = this.createLPToken(tokenA, tokenB);
+              }
+              
+              // Update with balance and pool info
+              lpToken.balance = liquidityResponse.liquidity;
+              lpToken.poolInfo = {
+                reserve_a: pool.reserve_a,
+                reserve_b: pool.reserve_b,
+                total_liquidity: pool.total_liquidity,
+                share_a: liquidityResponse.share_a,
+                share_b: liquidityResponse.share_b,
+                user_liquidity: liquidityResponse.liquidity
+              };
+              
+              console.log('✅ Updated LP token:', lpToken.symbol, 'Balance:', lpToken.balance);
+            }
+          }
+        } catch (error) {
+          console.log(`⚠️ No liquidity in pool ${pool.token_a}/${pool.token_b}:`, error.message);
+        }
+      }
+      
+      console.log('🏊 LP token balance update complete');
+      
+    } catch (error) {
+      console.error('❌ Error updating LP token balances:', error);
+    }
+  }
+
+  // Get all tokens including LP tokens with balances
+  getAllTokensWithLP() {
+    const regularTokens = this.getAllTokens();
+    const lpTokens = this.getAllLPTokens().filter(lp => lp.balance && lp.balance !== '0');
+    
+    return [...regularTokens, ...lpTokens];
+  }
+
   // Export data for Git repository
   exportForGit() {
     return {
