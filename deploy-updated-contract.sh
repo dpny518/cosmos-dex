@@ -8,9 +8,10 @@ set -e
 # Configuration
 CHAIN_ID="cosmoshub-4"
 NODE="https://cosmos-rpc.polkachu.com"
-DEPLOYER_KEY="deployer"
+DEPLOYER_KEY="dex-deployer"
 CONTRACT_PATH="./contracts/dex-contract/artifacts/dex_contract.wasm"
 GAS_PRICES="0.025uatom"
+MNEMONIC="***REMOVED***"
 
 # Colors for output
 RED='\033[0;31m'
@@ -33,12 +34,8 @@ fi
 CONTRACT_SIZE=$(ls -lh "$CONTRACT_PATH" | awk '{print $5}')
 echo -e "${BLUE}📦 Contract size: $CONTRACT_SIZE${NC}"
 
-# Import deployer key if not exists
-echo -e "${YELLOW}🔑 Setting up deployer key...${NC}"
-if ! gaiad keys show $DEPLOYER_KEY --keyring-backend test >/dev/null 2>&1; then
-    echo "Importing deployer key..."
-    echo "price south weasel profit fatigue phrase mention major nation penalty valley area van bomb property draft veteran barely buddy cat organ alcohol carry used" | gaiad keys add $DEPLOYER_KEY --recover --keyring-backend test
-fi
+# Use existing deployer key
+echo -e "${YELLOW}🔑 Using existing deployer key...${NC}"
 
 DEPLOYER_ADDRESS=$(gaiad keys show $DEPLOYER_KEY -a --keyring-backend test)
 echo -e "${GREEN}✅ Deployer address: $DEPLOYER_ADDRESS${NC}"
@@ -100,7 +97,7 @@ echo -e "${GREEN}📋 Code ID: $CODE_ID${NC}"
 echo -e "${YELLOW}🏗️ Instantiating contract...${NC}"
 
 INSTANTIATE_MSG='{
-  "admin": null,
+  "admin": "'$DEPLOYER_ADDRESS'",
   "fee_rate": "30"
 }'
 
@@ -113,6 +110,7 @@ INSTANTIATE_RESULT=$(gaiad tx wasm instantiate $CODE_ID "$INSTANTIATE_MSG" \
     --gas auto \
     --gas-adjustment 1.3 \
     --label "DEX Contract v2 - IBC Support" \
+    --admin $DEPLOYER_ADDRESS \
     --broadcast-mode sync \
     --yes \
     --output json)
@@ -150,7 +148,35 @@ echo -e "${BLUE}🔗 Explorer Links:${NC}"
 echo -e "Mintscan: https://www.mintscan.io/cosmos/wasm/contract/$CONTRACT_ADDRESS"
 echo -e "Celatone: https://celatone.osmosis.zone/cosmoshub-4/contracts/$CONTRACT_ADDRESS"
 echo ""
-echo -e "${YELLOW}📝 Update your .env file:${NC}"
-echo "VITE_CONTRACT_ADDRESS=$CONTRACT_ADDRESS"
+echo -e "${YELLOW}📝 Updating .env file...${NC}"
+
+# Update .env file
+if [ -f ".env" ]; then
+    # Create backup
+    cp .env .env.backup
+    # Update contract address
+    sed -i.bak "s/VITE_CONTRACT_ADDRESS=.*/VITE_CONTRACT_ADDRESS=$CONTRACT_ADDRESS/" .env
+    echo -e "${GREEN}✅ .env file updated successfully!${NC}"
+    echo -e "${GREEN}📄 Backup saved as .env.backup${NC}"
+else
+    echo -e "${YELLOW}⚠️ .env file not found, creating new one...${NC}"
+    cat > .env << EOF
+# Cosmos DEX Frontend - Essential Configuration Only
+# Most network info comes from Keplr's chain registry
+
+# Contract Configuration (Required)
+VITE_CONTRACT_ADDRESS=$CONTRACT_ADDRESS
+
+# Optional: Code ID for contract verification/analytics
+VITE_CODE_ID=$CODE_ID
+
+# App Configuration (Optional)
+VITE_APP_NAME=Cosmos DEX
+VITE_APP_VERSION=2.0.0
+EOF
+    echo -e "${GREEN}✅ .env file created successfully!${NC}"
+fi
+
 echo ""
 echo -e "${GREEN}✅ Deployment complete! The contract now supports IBC tokens.${NC}"
+echo -e "${BLUE}🚀 You can now create pools with IBC tokens like USDC!${NC}"
