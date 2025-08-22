@@ -9,7 +9,12 @@ import Header from './components/Header.jsx';
 import SwapInterface from './components/SwapInterface.jsx';
 import LiquidityInterface from './components/LiquidityInterface.jsx';
 import LPTokenGenerator from './components/LPTokenGenerator.jsx';
+import TokenLaunchpad from './components/TokenLaunchpad.jsx';
+import TokenManager from './components/TokenManager.jsx';
 import { config } from './config';
+
+// Import tokenRegistry for LP token balance updates
+import tokenRegistryService from './services/tokenRegistry.js';
 
 const GlobalStyle = createGlobalStyle`
   * {
@@ -153,10 +158,10 @@ function App() {
         const balances = await getAllBalances(account.address);
         setAllBalances(balances);
         
-        // Update LP token balances if we have a client
-        if (client && contractAddress) {
+        // Update LP token balances if we have a client and contract
+        if (client && config.contractAddress && config.contractAddress !== 'cosmos1...' && tokenRegistryService) {
           try {
-            await tokenRegistry.updateLPTokenBalances(client, contractAddress, account.address);
+            await tokenRegistryService.updateLPTokenBalances(client, config.contractAddress, account.address);
             console.log('✅ LP token balances updated');
           } catch (error) {
             console.error('❌ Error updating LP token balances:', error);
@@ -166,7 +171,7 @@ function App() {
     };
 
     fetchBalances();
-  }, [account, getBalance, getAllBalances, client, contractAddress]);
+  }, [account, getBalance, getAllBalances, client]);
 
   const handleGetBalance = async (address) => {
     const atomBalance = await getBalance(address);
@@ -212,6 +217,12 @@ function App() {
             </NavButton>
             <NavButton to="/generator">
               LP Generator
+            </NavButton>
+            <NavButton to="/launchpad">
+              🚀 Token Launchpad
+            </NavButton>
+            <NavButton to="/tokens">
+              🎛️ Token Manager
             </NavButton>
           </NavContainer>
         </Navigation>
@@ -295,6 +306,14 @@ function App() {
                   console.log('Creating pool for pair:', pair);
                 }}
               />
+            } />
+            
+            <Route path="/launchpad" element={
+              <TokenLaunchpad />
+            } />
+            
+            <Route path="/tokens" element={
+              <TokenManager />
             } />
           </Routes>
         </MainContent>
