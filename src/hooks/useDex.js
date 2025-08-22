@@ -238,6 +238,8 @@ export const useDex = (client, account) => {
     simulateSwap,
     getConfig,
     queryContract,
-    executeContract
+    executeContract,
+    client,
+    contractAddress
   };
 };

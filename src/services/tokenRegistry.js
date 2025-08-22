@@ -455,6 +455,68 @@ class TokenRegistry {
     return [...regularTokens, ...lpTokens];
   }
 
+  // Get only tokens that have liquidity pools available (for swap interface)
+  async getSwappableTokens(client, contractAddress) {
+    if (!client || !contractAddress) {
+      console.log('⚠️ Missing client or contract address for pool queries');
+      // Fallback to known tokens if contract query fails
+      return this.getAllTokens().filter(token => 
+        token.symbol === 'ATOM' || 
+        token.symbol === 'USDC' ||
+        token.force_added ||
+        token.manually_added
+      );
+    }
+
+    console.log('🏊 Querying available pools for swappable tokens...');
+    const swappableTokens = new Set();
+    
+    try {
+      // Get all pools from contract
+      const poolsResponse = await client.queryContractSmart(contractAddress, {
+        pools: { limit: 100 }
+      });
+      
+      console.log('📊 Found pools in contract:', poolsResponse.pools?.length || 0);
+      
+      // For each pool, add both tokens to the swappable set
+      for (const pool of poolsResponse.pools || []) {
+        // Only include pools with actual liquidity
+        if (pool.reserve_a && pool.reserve_b && 
+            parseFloat(pool.reserve_a) > 0 && 
+            parseFloat(pool.reserve_b) > 0) {
+          
+          swappableTokens.add(pool.token_a);
+          swappableTokens.add(pool.token_b);
+          
+          console.log(`✅ Pool found: ${pool.token_a} ↔ ${pool.token_b}`);
+        }
+      }
+      
+      console.log('🎯 Total unique swappable tokens:', swappableTokens.size);
+      
+      // Return only tokens that exist in pools
+      const availableTokens = this.getAllTokens().filter(token => 
+        swappableTokens.has(token.denom)
+      );
+      
+      console.log('📋 Swappable tokens:', availableTokens.map(t => t.symbol).join(', '));
+      
+      return availableTokens;
+      
+    } catch (error) {
+      console.error('❌ Error querying pools for swappable tokens:', error);
+      
+      // Fallback to known tokens that likely have pools
+      return this.getAllTokens().filter(token => 
+        token.symbol === 'ATOM' || 
+        token.symbol === 'USDC' ||
+        token.force_added ||
+        token.manually_added
+      );
+    }
+  }
+
   // Export data for Git repository
   exportForGit() {
     return {
