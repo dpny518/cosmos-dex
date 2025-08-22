@@ -232,16 +232,6 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     loadTokens();
   }, [balances]);
 
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      if (tokenA && tokenB && dex) {
-        loadPoolInfo();
-      }
-    }, 300); // Debounce by 300ms
-    
-    return () => clearTimeout(timer);
-  }, [tokenA, tokenB, dex, loadPoolInfo]);
-
   const loadPoolInfo = useCallback(async () => {
     if (!dex || !tokenA || !tokenB) {
       setPoolInfo(null);
@@ -261,6 +251,16 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
       }
     }
   }, [dex, tokenA, tokenB]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (tokenA && tokenB && dex) {
+        loadPoolInfo();
+      }
+    }, 300); // Debounce by 300ms
+    
+    return () => clearTimeout(timer);
+  }, [tokenA, tokenB, dex, loadPoolInfo]);
 
   const handleTokenSelect = (token) => {
     if (selectingFor === 'A') {
