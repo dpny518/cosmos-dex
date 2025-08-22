@@ -206,6 +206,142 @@ const RemoveButton = styled.button`
   &:hover {
     background: #c82333;
   }
+  
+  &:disabled {
+    background: #9ca3af;
+    cursor: not-allowed;
+  }
+`;
+
+const RemoveContainer = styled.div`
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+`;
+
+const PositionSelector = styled.div`
+  margin-bottom: 24px;
+`;
+
+const PositionCard = styled.div`
+  border: 2px solid ${props => props.$selected ? '#3b82f6' : '#e5e7eb'};
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  
+  &:hover {
+    border-color: #3b82f6;
+  }
+`;
+
+const SliderContainer = styled.div`
+  margin: 24px 0;
+`;
+
+const SliderLabel = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #374151;
+`;
+
+const PercentageDisplay = styled.span`
+  color: #3b82f6;
+  font-size: 1.2em;
+  font-weight: 700;
+`;
+
+const Slider = styled.input`
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  background: #e5e7eb;
+  outline: none;
+  appearance: none;
+  margin: 12px 0;
+  
+  &::-webkit-slider-thumb {
+    appearance: none;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+  
+  &::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: #3b82f6;
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  }
+`;
+
+const QuickButtons = styled.div`
+  display: flex;
+  gap: 8px;
+  margin: 12px 0;
+`;
+
+const QuickButton = styled.button`
+  background: ${props => props.$active ? '#3b82f6' : '#f3f4f6'};
+  color: ${props => props.$active ? 'white' : '#374151'};
+  border: none;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 500;
+  flex: 1;
+  
+  &:hover {
+    background: ${props => props.$active ? '#2563eb' : '#e5e7eb'};
+  }
+`;
+
+const BreakdownContainer = styled.div`
+  background: #f9fafb;
+  border-radius: 12px;
+  padding: 20px;
+  margin: 20px 0;
+`;
+
+const BreakdownTitle = styled.h4`
+  margin: 0 0 16px 0;
+  color: #374151;
+  font-size: 1.1rem;
+`;
+
+const BreakdownRow = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid #e5e7eb;
+  
+  &:last-child {
+    border-bottom: none;
+  }
+`;
+
+const TokenReceive = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+`;
+
+const TokenAmount = styled.span`
+  font-weight: 600;
+  color: #059669;
 `;
 
 const LiquidityInterface = ({ dex, balances = {} }) => {
@@ -219,6 +355,8 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
   const [poolInfo, setPoolInfo] = useState(null);
   const [userLiquidity, setUserLiquidity] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState(null);
+  const [removePercentage, setRemovePercentage] = useState(50);
 
   useEffect(() => {
     // Load tokens including those from user balances
@@ -375,7 +513,7 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     
     setLoading(true);
     try {
-      const liquidityAmount = (parseFloat(lpToken.balance) * percentage / 100).toString();
+      const liquidityAmount = Math.floor(parseFloat(lpToken.balance) * percentage / 100).toString();
       
       await dex.removeLiquidity(
         lpToken.pair.tokenA.denom,
@@ -396,6 +534,36 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const calculateRemovalBreakdown = (position, percentage) => {
+    if (!position || !position.poolInfo) return null;
+    
+    const { poolInfo, lpToken } = position;
+    const userLPBalance = parseFloat(lpToken.balance);
+    const totalLiquidity = parseFloat(poolInfo.total_liquidity);
+    const userShare = userLPBalance / totalLiquidity;
+    
+    // Calculate proportional amounts
+    const tokenAReceive = (parseFloat(poolInfo.reserve_a) * userShare * percentage / 100) / Math.pow(10, lpToken.pair.tokenA.decimals);
+    const tokenBReceive = (parseFloat(poolInfo.reserve_b) * userShare * percentage / 100) / Math.pow(10, lpToken.pair.tokenB.decimals);
+    const lpTokensToRemove = (userLPBalance * percentage / 100) / Math.pow(10, lpToken.decimals);
+    
+    return {
+      tokenA: {
+        symbol: lpToken.pair.tokenA.symbol,
+        amount: tokenAReceive.toFixed(6)
+      },
+      tokenB: {
+        symbol: lpToken.pair.tokenB.symbol,
+        amount: tokenBReceive.toFixed(6)
+      },
+      lpTokensRemoved: lpTokensToRemove.toFixed(6)
+    };
+  };
+
+  const handleQuickPercentage = (percentage) => {
+    setRemovePercentage(percentage);
   };
 
   const canAddLiquidity = tokenA && tokenB && amountA && amountB && parseFloat(amountA) > 0 && parseFloat(amountB) > 0;
@@ -567,28 +735,120 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
             🔥 Remove Liquidity
           </Title>
           
-          <LiquidityList>
-            {userLiquidity.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
-                No liquidity positions found
-              </div>
-            ) : (
-              userLiquidity.map((position, index) => (
-                <LiquidityItem key={index}>
-                  <LiquidityInfo>
-                    <LiquidityPair>{position.pair}</LiquidityPair>
-                    <LiquidityAmount>Liquidity: {position.amount}</LiquidityAmount>
-                  </LiquidityInfo>
-                  <RemoveButton 
-                    onClick={() => removeLiquidity(position.lpToken)}
-                    disabled={loading}
+          {userLiquidity.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px', color: '#666' }}>
+              No liquidity positions found
+            </div>
+          ) : (
+            <RemoveContainer>
+              <PositionSelector>
+                <h4 style={{ marginBottom: '16px', color: '#374151' }}>Select Position</h4>
+                {userLiquidity.map((position, index) => (
+                  <PositionCard 
+                    key={index}
+                    $selected={selectedPosition === index}
+                    onClick={() => setSelectedPosition(index)}
                   >
-                    {loading ? 'Removing...' : 'Remove 100%'}
+                    <LiquidityInfo>
+                      <LiquidityPair>{position.pair}</LiquidityPair>
+                      <LiquidityAmount>Liquidity: {position.amount}</LiquidityAmount>
+                    </LiquidityInfo>
+                  </PositionCard>
+                ))}
+              </PositionSelector>
+
+              {selectedPosition !== null && (
+                <>
+                  <SliderContainer>
+                    <SliderLabel>
+                      <span>Amount to Remove</span>
+                      <PercentageDisplay>{removePercentage}%</PercentageDisplay>
+                    </SliderLabel>
+                    
+                    <Slider
+                      type="range"
+                      min="1"
+                      max="100"
+                      value={removePercentage}
+                      onChange={(e) => setRemovePercentage(Number(e.target.value))}
+                    />
+                    
+                    <QuickButtons>
+                      <QuickButton 
+                        $active={removePercentage === 25}
+                        onClick={() => handleQuickPercentage(25)}
+                      >
+                        25%
+                      </QuickButton>
+                      <QuickButton 
+                        $active={removePercentage === 50}
+                        onClick={() => handleQuickPercentage(50)}
+                      >
+                        50%
+                      </QuickButton>
+                      <QuickButton 
+                        $active={removePercentage === 75}
+                        onClick={() => handleQuickPercentage(75)}
+                      >
+                        75%
+                      </QuickButton>
+                      <QuickButton 
+                        $active={removePercentage === 100}
+                        onClick={() => handleQuickPercentage(100)}
+                      >
+                        100%
+                      </QuickButton>
+                    </QuickButtons>
+                  </SliderContainer>
+
+                  {calculateRemovalBreakdown(userLiquidity[selectedPosition], removePercentage) && (
+                    <BreakdownContainer>
+                      <BreakdownTitle>You will receive:</BreakdownTitle>
+                      
+                      {(() => {
+                        const breakdown = calculateRemovalBreakdown(userLiquidity[selectedPosition], removePercentage);
+                        return (
+                          <>
+                            <BreakdownRow>
+                              <TokenReceive>
+                                <span>{breakdown.tokenA.symbol}</span>
+                              </TokenReceive>
+                              <TokenAmount>{breakdown.tokenA.amount}</TokenAmount>
+                            </BreakdownRow>
+                            
+                            <BreakdownRow>
+                              <TokenReceive>
+                                <span>{breakdown.tokenB.symbol}</span>
+                              </TokenReceive>
+                              <TokenAmount>{breakdown.tokenB.amount}</TokenAmount>
+                            </BreakdownRow>
+                            
+                            <BreakdownRow>
+                              <span style={{ color: '#6b7280' }}>LP Tokens to Remove</span>
+                              <span style={{ color: '#6b7280' }}>{breakdown.lpTokensRemoved}</span>
+                            </BreakdownRow>
+                          </>
+                        );
+                      })()}
+                    </BreakdownContainer>
+                  )}
+
+                  <RemoveButton 
+                    onClick={() => removeLiquidity(userLiquidity[selectedPosition].lpToken, removePercentage)}
+                    disabled={loading}
+                    style={{ 
+                      width: '100%', 
+                      padding: '12px',
+                      fontSize: '16px',
+                      fontWeight: '600'
+                    }}
+                  >
+                    {loading ? 'Removing...' : `Remove ${removePercentage}% Liquidity`}
                   </RemoveButton>
-                </LiquidityItem>
-              ))
-            )}
-          </LiquidityList>
+                </>
+              )}
+            </RemoveContainer>
+          )}
         </>
       )}
 
