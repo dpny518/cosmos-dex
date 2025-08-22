@@ -311,6 +311,14 @@ const TokenLaunchpad = () => {
         </InfoText>
       </InfoBox>
 
+      <InfoBox style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.2)' }}>
+        <InfoTitle>🔍 Smart Contract Detection</InfoTitle>
+        <InfoText>
+          Our system automatically detects the correct CW20 contract code ID for deployment. If auto-detection fails, 
+          you'll be prompted to enter the code ID manually. This ensures your token deploys correctly every time.
+        </InfoText>
+      </InfoBox>
+
       <Form onSubmit={launchToken}>
         <FormRow columns="1fr 1fr">
           <FormGroup>
