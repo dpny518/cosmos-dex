@@ -4,21 +4,40 @@ import { tokenRegistry } from '../services/tokenRegistry';
 import { config } from '../config';
 
 const Container = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 1000px;
+  background: rgba(15, 17, 25, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 1200px;
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+    pointer-events: none;
+  }
 `;
 
 const Title = styled.h3`
-  margin: 0 0 24px 0;
-  color: #333;
+  margin: 0 0 32px 0;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 1.5rem;
+  gap: 12px;
+  font-size: 1.6rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
 `;
 
 const PoolsGrid = styled.div`

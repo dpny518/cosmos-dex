@@ -22,121 +22,338 @@ const GlobalStyle = createGlobalStyle`
   }
 
   body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
-                 'Oxygen', 'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 
-                 'Helvetica Neue', sans-serif;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 
+                 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+    background: #0a0b0d;
     min-height: 100vh;
+    color: #ffffff;
+    overflow-x: hidden;
   }
 
   #root {
     min-height: 100vh;
   }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #1a1b1e;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #404040;
+    border-radius: 4px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #505050;
+  }
+
+  /* Glass effect utilities */
+  .glass {
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .gradient-text {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
 `;
 
 const AppContainer = styled.div`
   min-height: 100vh;
-  background: linear-gradient(135deg, #f0f2f5 0%, #e6e9f0 100%);
+  background: radial-gradient(ellipse at top, rgba(102, 126, 234, 0.1) 0%, transparent 70%),
+              radial-gradient(ellipse at bottom, rgba(118, 75, 162, 0.1) 0%, transparent 70%),
+              #0a0b0d;
+  position: relative;
+  
+  &::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: 
+      radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+      radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.2) 0%, transparent 50%),
+      radial-gradient(circle at 40% 40%, rgba(120, 219, 255, 0.1) 0%, transparent 50%);
+    pointer-events: none;
+    z-index: -1;
+  }
 `;
 
 const Navigation = styled.nav`
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
+  background: rgba(13, 15, 20, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  position: sticky;
+  top: 0;
+  z-index: 100;
 `;
 
 const NavContainer = styled.div`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
   display: flex;
-  gap: 2rem;
-  padding: 1rem 2rem;
+  gap: 0;
+  padding: 0 2rem;
+  align-items: center;
 `;
 
 const NavButton = styled(NavLink)`
-  padding: 0.75rem 1.5rem;
-  border-radius: 8px;
+  padding: 1.25rem 2rem;
   text-decoration: none;
-  color: #6b7280;
-  font-weight: 500;
-  transition: all 0.2s;
+  color: rgba(255, 255, 255, 0.7);
+  font-weight: 600;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  position: relative;
+  border-radius: 0;
+  
+  &::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 50%;
+    width: 0;
+    height: 2px;
+    background: linear-gradient(90deg, #667eea, #764ba2);
+    transition: all 0.3s ease;
+    transform: translateX(-50%);
+  }
   
   &:hover {
-    color: #3b82f6;
-    background: #f3f4f6;
+    color: rgba(255, 255, 255, 0.9);
+    background: rgba(255, 255, 255, 0.02);
+    
+    &::after {
+      width: 60%;
+    }
   }
   
   &.active {
-    color: #3b82f6;
-    background: #dbeafe;
+    color: #ffffff;
+    background: rgba(102, 126, 234, 0.1);
+    
+    &::after {
+      width: 80%;
+    }
   }
 `;
 
 const MainContent = styled.main`
-  max-width: 1200px;
+  max-width: 1400px;
   margin: 0 auto;
-  padding: 0 2rem 2rem;
+  padding: 2rem;
+  position: relative;
+  z-index: 1;
 `;
 
 const WelcomeCard = styled.div`
-  background: white;
-  border-radius: 16px;
-  padding: 3rem;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  background: rgba(15, 17, 25, 0.7);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 4rem 3rem;
   text-align: center;
-  max-width: 600px;
+  max-width: 800px;
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.05) 0%, rgba(118, 75, 162, 0.05) 100%);
+    pointer-events: none;
+  }
+  
+  &::after {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3), rgba(118, 75, 162, 0.3));
+    border-radius: 26px;
+    z-index: -1;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover::after {
+    opacity: 0.5;
+  }
 `;
 
 const WelcomeTitle = styled.h1`
-  color: #1f2937;
-  margin-bottom: 1rem;
-  font-size: 2.5rem;
+  color: #ffffff;
+  margin-bottom: 1.5rem;
+  font-size: 3.5rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  position: relative;
+  z-index: 1;
 `;
 
 const WelcomeDescription = styled.p`
-  color: #6b7280;
-  font-size: 1.1rem;
-  line-height: 1.6;
-  margin-bottom: 2rem;
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.2rem;
+  line-height: 1.7;
+  margin-bottom: 3rem;
+  font-weight: 400;
+  position: relative;
+  z-index: 1;
 `;
 
 const FeatureGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-top: 2rem;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+  margin-top: 3rem;
+  position: relative;
+  z-index: 1;
 `;
 
 const FeatureCard = styled.div`
-  background: #f9fafb;
-  padding: 1.5rem;
-  border-radius: 12px;
+  background: rgba(20, 23, 31, 0.6);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  padding: 2rem 1.5rem;
+  border-radius: 16px;
   text-align: center;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.02) 0%, rgba(118, 75, 162, 0.02) 100%);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(102, 126, 234, 0.3);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    
+    &::before {
+      opacity: 1;
+    }
+  }
 `;
 
 const FeatureIcon = styled.div`
-  font-size: 2rem;
-  margin-bottom: 0.5rem;
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+  filter: grayscale(0.2);
+  transition: filter 0.3s ease;
+  
+  ${FeatureCard}:hover & {
+    filter: grayscale(0);
+  }
 `;
 
 const FeatureTitle = styled.h3`
-  color: #1f2937;
-  margin-bottom: 0.5rem;
+  color: #ffffff;
+  margin-bottom: 0.75rem;
+  font-size: 1.1rem;
+  font-weight: 700;
 `;
 
 const FeatureDescription = styled.p`
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.7);
   font-size: 0.9rem;
+  line-height: 1.5;
 `;
 
 const ContractInfo = styled.div`
-  background: #fef3c7;
-  border: 1px solid #fbbf24;
-  border-radius: 8px;
-  padding: 1rem;
+  background: rgba(251, 191, 36, 0.1);
+  border: 1px solid rgba(251, 191, 36, 0.3);
+  border-radius: 12px;
+  padding: 1.25rem;
   margin-bottom: 2rem;
   text-align: center;
+  color: #fbbf24;
+  font-weight: 500;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+`;
+
+const ConnectButton = styled.button`
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 2.5rem;
+  border-radius: 16px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  cursor: pointer;
+  margin-bottom: 3rem;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+  }
+  
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(102, 126, 234, 0.4);
+    
+    &::before {
+      left: 100%;
+    }
+  }
+  
+  &:active {
+    transform: translateY(0);
+  }
+  
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+    
+    &:hover {
+      box-shadow: 0 8px 32px rgba(102, 126, 234, 0.3);
+    }
+  }
 `;
 
 function App() {
@@ -230,23 +447,12 @@ function App() {
                 </WelcomeDescription>
                 
                 {!isConnected && (
-                  <button
+                  <ConnectButton
                     onClick={connectWallet}
                     disabled={isConnecting}
-                    style={{
-                      background: '#3b82f6',
-                      color: 'white',
-                      border: 'none',
-                      padding: '1rem 2rem',
-                      borderRadius: '8px',
-                      fontSize: '1.1rem',
-                      fontWeight: '600',
-                      cursor: 'pointer',
-                      marginBottom: '2rem'
-                    }}
                   >
-                    {isConnecting ? 'Connecting...' : 'Connect Keplr Wallet'}
-                  </button>
+                    {isConnecting ? '⏳ Connecting...' : '🔗 Connect Keplr Wallet'}
+                  </ConnectButton>
                 )}
 
                 <FeatureGrid>

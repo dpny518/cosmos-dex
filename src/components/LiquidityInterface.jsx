@@ -5,44 +5,73 @@ import TokenSelector from './TokenSelector';
 import { tokenRegistry } from '../services/tokenRegistry';
 
 const Container = styled.div`
-  background: white;
-  border-radius: 12px;
-  padding: 24px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  max-width: 600px;
+  background: rgba(15, 17, 25, 0.8);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+  max-width: 700px;
   margin: 0 auto;
+  position: relative;
+  overflow: hidden;
+  
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.03) 0%, rgba(118, 75, 162, 0.03) 100%);
+    pointer-events: none;
+  }
 `;
 
 const TabContainer = styled.div`
   display: flex;
-  margin-bottom: 24px;
-  background: #f3f4f6;
-  border-radius: 12px;
-  padding: 4px;
+  margin-bottom: 32px;
+  background: rgba(20, 23, 31, 0.4);
+  border-radius: 16px;
+  padding: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 `;
 
 const Tab = styled.button`
   flex: 1;
-  padding: 12px;
+  padding: 16px 24px;
   border: none;
-  border-radius: 8px;
-  background: ${props => props.$active ? 'white' : 'transparent'};
-  color: ${props => props.$active ? '#1f2937' : '#6b7280'};
-  font-weight: 500;
+  border-radius: 12px;
+  background: ${props => props.$active ? 
+    'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)' : 
+    'transparent'
+  };
+  color: ${props => props.$active ? '#ffffff' : 'rgba(255, 255, 255, 0.6)'};
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
   
   &:hover {
-    color: #1f2937;
+    color: rgba(255, 255, 255, 0.9);
+    background: ${props => props.$active ? 
+      'linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%)' : 
+      'rgba(255, 255, 255, 0.02)'
+    };
   }
 `;
 
 const Title = styled.h3`
-  margin: 0 0 20px 0;
-  color: #333;
+  margin: 0 0 24px 0;
+  color: #ffffff;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 12px;
+  font-size: 1.4rem;
+  font-weight: 700;
+  position: relative;
+  z-index: 1;
 `;
 
 const TokenPairContainer = styled.div`
