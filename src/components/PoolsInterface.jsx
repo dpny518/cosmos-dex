@@ -224,14 +224,93 @@ const PoolsInterface = ({ dex }) => {
 
       console.log('🔗 Using contract address:', contractAddress);
 
-      // Get all pools from contract
-      const poolsResponse = await dex.client.queryContractSmart(contractAddress, {
-        pools: { limit: 100 }
-      });
+      // Try to get contract info first to debug
+      try {
+        const contractInfo = await dex.client.getContract(contractAddress);
+        console.log('📄 Contract info:', contractInfo);
+      } catch (infoError) {
+        console.log('⚠️ Could not get contract info:', infoError.message);
+      }
 
-      console.log('📊 Raw pools response:', poolsResponse);
+      // Try different query methods to find pools
+      let poolsResponse = null;
+      const queryMethods = [
+        { pools: { limit: 100 } },
+        { all_pools: {} },
+        { list_pools: { limit: 100 } },
+        { get_pools: {} }
+      ];
 
-      if (!poolsResponse.pools || poolsResponse.pools.length === 0) {
+      console.log('🔍 Trying different query methods...');
+      
+      for (const query of queryMethods) {
+        try {
+          console.log('🔍 Trying query:', query);
+          poolsResponse = await dex.client.queryContractSmart(contractAddress, query);
+          console.log('✅ Success with query:', query, 'Response:', poolsResponse);
+          break;
+        } catch (queryError) {
+          console.log('❌ Query failed:', query, 'Error:', queryError.message);
+        }
+      }
+
+      if (!poolsResponse) {
+        // Try to check if contract is responsive at all
+        try {
+          const configResponse = await dex.client.queryContractSmart(contractAddress, { config: {} });
+          console.log('📋 Contract config response:', configResponse);
+          throw new Error('Contract is responsive but no pool query method worked. The contract might not have any pools yet.');
+        } catch (configError) {
+          throw new Error(`Contract query failed: ${configError.message}. Contract might not be deployed or accessible.`);
+        }
+      }
+
+      console.log('📊 Final pools response:', poolsResponse);
+
+      // Extract pools from different possible response formats
+      let poolsArray = [];
+      if (poolsResponse.pools && Array.isArray(poolsResponse.pools)) {
+        poolsArray = poolsResponse.pools;
+      } else if (Array.isArray(poolsResponse)) {
+        poolsArray = poolsResponse;
+      } else if (poolsResponse.data && Array.isArray(poolsResponse.data)) {
+        poolsArray = poolsResponse.data;
+      } else {
+        console.log('⚠️ Unknown pools response format:', poolsResponse);
+      }
+
+      console.log('📋 Extracted pools array:', poolsArray);
+
+      if (!poolsArray || poolsArray.length === 0) {
+        console.log('📭 No pools found in response, checking for known pools...');
+        
+        // Fallback: Check if we have any LP tokens that indicate pools exist
+        const lpTokens = tokenRegistry.getAllLPTokens();
+        console.log('🔍 Found LP tokens:', lpTokens);
+        
+        if (lpTokens.length > 0) {
+          console.log('📋 Using LP tokens to reconstruct pool data');
+          
+          // Create mock pool data from LP tokens
+          const mockPools = lpTokens.filter(lp => lp.poolInfo).map(lp => ({
+            token_a: lp.pair.tokenA.denom,
+            token_b: lp.pair.tokenB.denom,
+            reserve_a: lp.poolInfo.reserve_a || '0',
+            reserve_b: lp.poolInfo.reserve_b || '0', 
+            total_liquidity: lp.poolInfo.total_liquidity || '0',
+            tokenA: lp.pair.tokenA,
+            tokenB: lp.pair.tokenB,
+            _source: 'mock_from_lp'
+          }));
+          
+          console.log('🏊 Created mock pools from LP tokens:', mockPools);
+          
+          if (mockPools.length > 0) {
+            setPools(mockPools);
+            return;
+          }
+        }
+        
         setPools([]);
         return;
       }
@@ -240,7 +319,7 @@ const PoolsInterface = ({ dex }) => {
       await tokenRegistry.loadTokens();
 
       // Enhance pools with token information
-      const enhancedPools = poolsResponse.pools.map(pool => {
+      const enhancedPools = poolsArray.map(pool => {
         const tokenA = tokenRegistry.getToken(pool.token_a);
         const tokenB = tokenRegistry.getToken(pool.token_b);
 
