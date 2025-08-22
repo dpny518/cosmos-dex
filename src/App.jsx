@@ -8,6 +8,7 @@ import { useDex } from './hooks/useDex.js';
 import Header from './components/Header.jsx';
 import SwapInterface from './components/SwapInterface.jsx';
 import LiquidityInterface from './components/LiquidityInterface.jsx';
+import PoolsInterface from './components/PoolsInterface.jsx';
 import { config } from './config';
 
 // Import tokenRegistry for LP token balance updates
@@ -212,6 +213,9 @@ function App() {
             <NavButton to="/liquidity">
               Liquidity
             </NavButton>
+            <NavButton to="/pools">
+              Pools
+            </NavButton>
           </NavContainer>
         </Navigation>
 
@@ -263,6 +267,14 @@ function App() {
                   </FeatureCard>
                   
                   <FeatureCard>
+                    <FeatureIcon>🏊</FeatureIcon>
+                    <FeatureTitle>Pool Overview</FeatureTitle>
+                    <FeatureDescription>
+                      View all liquidity pools and their stats
+                    </FeatureDescription>
+                  </FeatureCard>
+                  
+                  <FeatureCard>
                     <FeatureIcon>🔒</FeatureIcon>
                     <FeatureTitle>Secure</FeatureTitle>
                     <FeatureDescription>
@@ -284,6 +296,12 @@ function App() {
               <LiquidityInterface 
                 dex={dex} 
                 balances={allBalances}
+              />
+            } />
+            
+            <Route path="/pools" element={
+              <PoolsInterface 
+                dex={dex}
               />
             } />
             
