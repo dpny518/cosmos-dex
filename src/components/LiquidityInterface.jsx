@@ -515,10 +515,17 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     try {
       const liquidityAmount = Math.floor(parseFloat(lpToken.balance) * percentage / 100).toString();
       
+      // Calculate minimum amounts with 5% slippage protection
+      const breakdown = calculateRemovalBreakdown({ lpToken, poolInfo: lpToken.poolInfo }, percentage);
+      const minA = breakdown ? Math.floor(parseFloat(breakdown.tokenA.amount) * 0.95 * Math.pow(10, lpToken.pair.tokenA.decimals)).toString() : '0';
+      const minB = breakdown ? Math.floor(parseFloat(breakdown.tokenB.amount) * 0.95 * Math.pow(10, lpToken.pair.tokenB.decimals)).toString() : '0';
+      
       await dex.removeLiquidity(
         lpToken.pair.tokenA.denom,
         lpToken.pair.tokenB.denom,
-        liquidityAmount
+        liquidityAmount,
+        minA,
+        minB
       );
       
       toast.success(`Successfully removed ${percentage}% liquidity!`);

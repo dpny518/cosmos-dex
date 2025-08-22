@@ -8,9 +8,7 @@ import { useDex } from './hooks/useDex.js';
 import Header from './components/Header.jsx';
 import SwapInterface from './components/SwapInterface.jsx';
 import LiquidityInterface from './components/LiquidityInterface.jsx';
-import LPTokenGenerator from './components/LPTokenGenerator.jsx';
 import TokenLaunchpad from './components/TokenLaunchpad.jsx';
-import TokenManager from './components/TokenManager.jsx';
 import { config } from './config';
 
 // Import tokenRegistry for LP token balance updates
@@ -215,14 +213,8 @@ function App() {
             <NavButton to="/liquidity">
               Liquidity
             </NavButton>
-            <NavButton to="/generator">
-              LP Generator
-            </NavButton>
             <NavButton to="/launchpad">
               🚀 Token Launchpad
-            </NavButton>
-            <NavButton to="/tokens">
-              🎛️ Token Manager
             </NavButton>
           </NavContainer>
         </Navigation>
@@ -299,21 +291,8 @@ function App() {
               />
             } />
             
-            <Route path="/generator" element={
-              <LPTokenGenerator 
-                onCreatePool={(pair) => {
-                  // Handle pool creation from generator
-                  console.log('Creating pool for pair:', pair);
-                }}
-              />
-            } />
-            
             <Route path="/launchpad" element={
               <TokenLaunchpad />
-            } />
-            
-            <Route path="/tokens" element={
-              <TokenManager />
             } />
           </Routes>
         </MainContent>
