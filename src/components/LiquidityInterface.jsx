@@ -304,8 +304,8 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     
     setLoading(true);
     try {
-      const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
-      const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
+      const amountAWei = Math.floor(parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
+      const amountBWei = Math.floor(parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
       const minLiquidity = '1000'; // Minimum LP tokens to receive
       
       await dex.addLiquidity(tokenA.denom, tokenB.denom, amountAWei, amountBWei, minLiquidity);
@@ -328,8 +328,8 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
     // Check balances before creating pool
     const balanceA = balances[tokenA.denom] || '0';
     const balanceB = balances[tokenB.denom] || '0';
-    const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
-    const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
+    const amountAWei = Math.floor(parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
+    const amountBWei = Math.floor(parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
     
     if (parseInt(balanceA) < parseInt(amountAWei)) {
       toast.error(`Insufficient ${tokenA.symbol} balance. You have ${(parseInt(balanceA) / Math.pow(10, tokenA.decimals)).toFixed(2)} but need ${amountA}`);

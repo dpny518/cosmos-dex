@@ -73,12 +73,17 @@ export const useDex = (client, account) => {
   const createPool = useCallback(async (tokenA, tokenB, amountA, amountB) => {
     console.log('🏊 Creating pool with tokens:', { tokenA, tokenB, amountA, amountB });
     
+    // Sort tokens to ensure consistent ordering (many DEX contracts require this)
+    const shouldSwap = tokenA.localeCompare(tokenB) > 0;
+    const [sortedTokenA, sortedTokenB] = shouldSwap ? [tokenB, tokenA] : [tokenA, tokenB];
+    const [sortedAmountA, sortedAmountB] = shouldSwap ? [amountB, amountA] : [amountA, amountB];
+    
     const msg = {
       create_pool: {
-        token_a: tokenA,
-        token_b: tokenB,
-        initial_a: amountA.toString(),
-        initial_b: amountB.toString()
+        token_a: sortedTokenA,
+        token_b: sortedTokenB,
+        initial_a: sortedAmountA.toString(),
+        initial_b: sortedAmountB.toString()
       }
     };
 
@@ -86,11 +91,11 @@ export const useDex = (client, account) => {
 
     // Handle native tokens (ATOM and IBC tokens) - send as funds
     const funds = [];
-    if (tokenA === 'uatom' || tokenA.startsWith('ibc/')) {
-      funds.push(coin(amountA.toString(), tokenA));
+    if (sortedTokenA === 'uatom' || sortedTokenA.startsWith('ibc/')) {
+      funds.push(coin(sortedAmountA.toString(), sortedTokenA));
     }
-    if (tokenB === 'uatom' || tokenB.startsWith('ibc/')) {
-      funds.push(coin(amountB.toString(), tokenB));
+    if (sortedTokenB === 'uatom' || sortedTokenB.startsWith('ibc/')) {
+      funds.push(coin(sortedAmountB.toString(), sortedTokenB));
     }
     
     // IMPORTANT: Sort funds by denomination (CosmWasm requirement)
@@ -178,8 +183,12 @@ export const useDex = (client, account) => {
 
   // Get pool info
   const getPool = useCallback(async (tokenA, tokenB) => {
+    // Sort tokens to ensure consistent ordering
+    const shouldSwap = tokenA.localeCompare(tokenB) > 0;
+    const [sortedTokenA, sortedTokenB] = shouldSwap ? [tokenB, tokenA] : [tokenA, tokenB];
+    
     return await queryContract({
-      pool: { token_a: tokenA, token_b: tokenB }
+      pool: { token_a: sortedTokenA, token_b: sortedTokenB }
     });
   }, [queryContract]);
 
