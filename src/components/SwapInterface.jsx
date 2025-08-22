@@ -157,29 +157,28 @@ const SwapInterface = ({ dex, balances = {} }) => {
     // Load only swappable tokens (tokens with liquidity pools)
     const loadSwappableTokens = async () => {
       console.log('🔄 SwapInterface: Loading swappable tokens...');
+      console.log('🔄 SwapInterface DEX state:', { 
+        hasDex: !!dex, 
+        hasClient: !!dex?.client,
+        contractAddress: dex?.contractAddress
+      });
       
       // First load all tokens to populate registry
       await tokenRegistry.loadTokens(balances);
       
-      // Then get only tokens with liquidity
+      // Then get only tokens with liquidity - getSwappableTokens has proper fallback logic
       let swappableTokens = [];
-      if (dex && dex.client) {
+      if (dex) {
         // Try to get contract address from multiple sources
         const contractAddress = dex.contractAddress || 
                                config.contractAddress ||
                                import.meta.env?.VITE_CONTRACT_ADDRESS;
         
-        if (contractAddress && contractAddress !== 'cosmos1...') {
-          console.log('🔗 Using contract address:', contractAddress);
-          swappableTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
-        } else {
-          console.log('⚠️ No valid contract address found');
-        }
-      }
-      
-      // Fallback to all tokens if we couldn't get swappable ones
-      if (swappableTokens.length === 0) {
-        console.log('⚠️ No swappable tokens found, using fallback');
+        console.log('🔗 SwapInterface using contract address:', contractAddress);
+        swappableTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
+      } else {
+        console.log('⚠️ No DEX object available, getting fallback tokens');
+        // Fallback when no DEX is available
         swappableTokens = tokenRegistry.getAllTokens().filter(token => 
           token.symbol === 'ATOM' || 
           token.symbol === 'USDC' ||
@@ -188,12 +187,13 @@ const SwapInterface = ({ dex, balances = {} }) => {
         );
       }
       
-      console.log('📋 SwapInterface: Loaded swappable tokens:', swappableTokens.length);
+      console.log('📋 SwapInterface: Final swappable tokens:', swappableTokens.length);
       console.log('🎯 Available for swap:', swappableTokens.map(t => t.symbol).join(', '));
       
       if (swappableTokens.length > 0 && !tokenIn) {
         const atomToken = swappableTokens.find(t => t.symbol === 'ATOM') || swappableTokens[0];
         setTokenIn(atomToken);
+        console.log('✅ Set default tokenIn:', atomToken.symbol);
       }
     };
     

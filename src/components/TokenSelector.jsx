@@ -192,18 +192,14 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
                                config.contractAddress ||
                                import.meta.env?.VITE_CONTRACT_ADDRESS;
         
-        if (contractAddress && contractAddress !== 'cosmos1...' && dex.client) {
-          console.log('🏊 Getting swappable tokens only...', contractAddress);
-          allTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
-        } else {
-          console.log('⚠️ No valid contract address or client, using fallback tokens');
-          allTokens = tokenRegistry.getAllTokens().filter(token => 
-            token.symbol === 'ATOM' || 
-            token.symbol === 'USDC' ||
-            token.force_added ||
-            token.manually_added
-          );
-        }
+        console.log('🏊 TokenSelector getting swappable tokens with dex:', { 
+          hasDex: !!dex, 
+          hasClient: !!dex.client, 
+          contractAddress 
+        });
+        
+        // Always call getSwappableTokens - it has proper fallback logic
+        allTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
       } else {
         // Get all tokens including LP tokens with balances (for liquidity interface)
         allTokens = tokenRegistry.getAllTokensWithLP();

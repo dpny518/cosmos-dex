@@ -457,18 +457,27 @@ class TokenRegistry {
 
   // Get only tokens that have liquidity pools available (for swap interface)
   async getSwappableTokens(client, contractAddress) {
-    if (!client || !contractAddress) {
-      console.log('⚠️ Missing client or contract address for pool queries');
-      // Fallback to known tokens if contract query fails
-      return this.getAllTokens().filter(token => 
-        token.symbol === 'ATOM' || 
-        token.symbol === 'USDC' ||
-        token.force_added ||
-        token.manually_added
-      );
+    console.log('🏊 Getting swappable tokens...', { 
+      hasClient: !!client, 
+      hasContract: !!contractAddress,
+      contractAddress 
+    });
+
+    // Always ensure ATOM and USDC are available as fallback
+    const fallbackTokens = this.getAllTokens().filter(token => 
+      token.symbol === 'ATOM' || 
+      token.symbol === 'USDC' ||
+      token.force_added ||
+      token.manually_added
+    );
+    
+    console.log('🔄 Fallback tokens available:', fallbackTokens.map(t => t.symbol).join(', '));
+
+    if (!client || !contractAddress || contractAddress === 'cosmos1...') {
+      console.log('⚠️ Missing client or contract address for pool queries, using fallback tokens');
+      return fallbackTokens;
     }
 
-    console.log('🏊 Querying available pools for swappable tokens...');
     const swappableTokens = new Set();
     
     try {
@@ -493,27 +502,26 @@ class TokenRegistry {
         }
       }
       
-      console.log('🎯 Total unique swappable tokens:', swappableTokens.size);
+      console.log('🎯 Total unique swappable tokens from pools:', swappableTokens.size);
       
-      // Return only tokens that exist in pools
-      const availableTokens = this.getAllTokens().filter(token => 
+      // Get tokens that exist in pools
+      const poolTokens = this.getAllTokens().filter(token => 
         swappableTokens.has(token.denom)
       );
       
-      console.log('📋 Swappable tokens:', availableTokens.map(t => t.symbol).join(', '));
+      // If we found tokens in pools, use them, otherwise use fallback
+      const availableTokens = poolTokens.length > 0 ? poolTokens : fallbackTokens;
+      
+      console.log('📋 Final swappable tokens:', availableTokens.map(t => t.symbol).join(', '));
       
       return availableTokens;
       
     } catch (error) {
       console.error('❌ Error querying pools for swappable tokens:', error);
+      console.log('🔄 Using fallback tokens due to query error');
       
-      // Fallback to known tokens that likely have pools
-      return this.getAllTokens().filter(token => 
-        token.symbol === 'ATOM' || 
-        token.symbol === 'USDC' ||
-        token.force_added ||
-        token.manually_added
-      );
+      // Always return fallback tokens if query fails
+      return fallbackTokens;
     }
   }
 
