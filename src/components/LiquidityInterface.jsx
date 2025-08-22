@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import styled from 'styled-components';
 import { toast } from 'react-hot-toast';
 import TokenSelector from './TokenSelector';
@@ -233,22 +233,34 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
   }, [balances]);
 
   useEffect(() => {
-    if (tokenA && tokenB && dex) {
-      loadPoolInfo();
-    }
-  }, [tokenA, tokenB, dex]);
+    const timer = setTimeout(() => {
+      if (tokenA && tokenB && dex) {
+        loadPoolInfo();
+      }
+    }, 300); // Debounce by 300ms
+    
+    return () => clearTimeout(timer);
+  }, [tokenA, tokenB, dex, loadPoolInfo]);
 
-  const loadPoolInfo = async () => {
-    if (!dex || !tokenA || !tokenB) return;
+  const loadPoolInfo = useCallback(async () => {
+    if (!dex || !tokenA || !tokenB) {
+      setPoolInfo(null);
+      return;
+    }
     
     try {
       const pool = await dex.getPool(tokenA.denom, tokenB.denom);
       setPoolInfo(pool);
     } catch (error) {
-      console.error('Failed to load pool info:', error);
-      setPoolInfo(null);
+      // Pool not found is expected when pools don't exist yet
+      if (error.message?.includes('Pool not found')) {
+        setPoolInfo(null);
+      } else {
+        console.error('Failed to load pool info:', error);
+        setPoolInfo(null);
+      }
     }
-  };
+  }, [dex, tokenA, tokenB]);
 
   const handleTokenSelect = (token) => {
     if (selectingFor === 'A') {
@@ -298,11 +310,24 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
   const createPool = async () => {
     if (!dex || !tokenA || !tokenB || !amountA || !amountB) return;
     
+    // Check balances before creating pool
+    const balanceA = balances[tokenA.denom] || '0';
+    const balanceB = balances[tokenB.denom] || '0';
+    const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
+    const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
+    
+    if (parseInt(balanceA) < parseInt(amountAWei)) {
+      toast.error(`Insufficient ${tokenA.symbol} balance. You have ${(parseInt(balanceA) / Math.pow(10, tokenA.decimals)).toFixed(2)} but need ${amountA}`);
+      return;
+    }
+    
+    if (parseInt(balanceB) < parseInt(amountBWei)) {
+      toast.error(`Insufficient ${tokenB.symbol} balance. You have ${(parseInt(balanceB) / Math.pow(10, tokenB.decimals)).toFixed(2)} but need ${amountB}`);
+      return;
+    }
+    
     setLoading(true);
     try {
-      const amountAWei = (parseFloat(amountA) * Math.pow(10, tokenA.decimals)).toString();
-      const amountBWei = (parseFloat(amountB) * Math.pow(10, tokenB.decimals)).toString();
-      
       await dex.createPool(tokenA.denom, tokenB.denom, amountAWei, amountBWei);
       
       toast.success('Pool created successfully!');
@@ -311,7 +336,20 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
       loadPoolInfo();
     } catch (error) {
       console.error('Create pool failed:', error);
-      toast.error('Create pool failed: ' + error.message);
+      
+      // Extract meaningful error message
+      let errorMessage = error.message;
+      if (errorMessage.includes('insufficient funds')) {
+        errorMessage = 'Insufficient funds to create pool. Please check your token balances.';
+      } else if (errorMessage.includes('spendable balance')) {
+        const match = errorMessage.match(/spendable balance (\d+).*? is smaller than (\d+)/);
+        if (match) {
+          const [, available, required] = match;
+          errorMessage = `Insufficient balance: you have ${(parseInt(available) / 1000000).toFixed(2)} but need ${(parseInt(required) / 1000000).toFixed(2)}`;
+        }
+      }
+      
+      toast.error('Create pool failed: ' + errorMessage);
     } finally {
       setLoading(false);
     }
