@@ -6,7 +6,7 @@ use cw2::set_contract_version;
 use crate::error::ContractError;
 use crate::execute::{
     execute_add_liquidity, execute_create_pool, execute_remove_liquidity, execute_swap,
-    execute_update_admin, execute_update_fee_rate,
+    execute_update_admin, execute_update_fee_rate, execute_update_lp_token_code_id,
 };
 use crate::msg::{ExecuteMsg, InstantiateMsg, QueryMsg};
 use crate::query::{
@@ -35,6 +35,7 @@ pub fn instantiate(
     let config = Config {
         admin,
         fee_rate: msg.fee_rate,
+        lp_token_code_id: msg.lp_token_code_id,
     };
 
     CONFIG.save(deps.storage, &config)?;
@@ -42,7 +43,8 @@ pub fn instantiate(
     Ok(Response::new()
         .add_attribute("method", "instantiate")
         .add_attribute("admin", info.sender)
-        .add_attribute("fee_rate", msg.fee_rate))
+        .add_attribute("fee_rate", msg.fee_rate)
+        .add_attribute("lp_token_code_id", msg.lp_token_code_id.to_string()))
 }
 
 #[entry_point]
@@ -81,6 +83,7 @@ pub fn execute(
         } => execute_swap(deps, env, info, token_in, token_out, amount_in, min_amount_out),
         ExecuteMsg::UpdateAdmin { admin } => execute_update_admin(deps, info, admin),
         ExecuteMsg::UpdateFeeRate { fee_rate } => execute_update_fee_rate(deps, info, fee_rate),
+        ExecuteMsg::UpdateLpTokenCodeId { lp_token_code_id } => execute_update_lp_token_code_id(deps, info, lp_token_code_id),
     }
 }
 

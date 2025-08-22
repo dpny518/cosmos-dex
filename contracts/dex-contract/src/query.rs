@@ -9,6 +9,7 @@ pub fn query_config(deps: Deps) -> StdResult<Config> {
     Ok(Config {
         admin: config.admin,
         fee_rate: config.fee_rate,
+        lp_token_code_id: config.lp_token_code_id,
     })
 }
 
@@ -22,6 +23,7 @@ pub fn query_pool(deps: Deps, token_a: String, token_b: String) -> StdResult<Poo
         reserve_a: pool.reserve_a,
         reserve_b: pool.reserve_b,
         total_liquidity: pool.total_liquidity,
+        lp_token_address: pool.lp_token_address,
     })
 }
 
@@ -45,6 +47,7 @@ pub fn query_pools(
                 reserve_a: pool.reserve_a,
                 reserve_b: pool.reserve_b,
                 total_liquidity: pool.total_liquidity,
+                lp_token_address: pool.lp_token_address,
             })
         })
         .collect()
@@ -83,6 +86,7 @@ pub fn query_liquidity(
         liquidity: position.liquidity,
         share_a,
         share_b,
+        lp_token_address: pool.lp_token_address,
     })
 }
 

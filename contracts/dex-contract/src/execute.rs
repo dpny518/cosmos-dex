@@ -53,6 +53,7 @@ pub fn execute_create_pool(
         reserve_a: initial_a,
         reserve_b: initial_b,
         total_liquidity: initial_liquidity,
+        lp_token_address: None, // Will be set when we implement CW20 LP tokens
     };
 
     POOLS.save(deps.storage, key.clone(), &pool)?;
@@ -376,4 +377,24 @@ pub fn execute_update_fee_rate(
     Ok(Response::new()
         .add_attribute("method", "update_fee_rate")
         .add_attribute("new_fee_rate", fee_rate))
+}
+
+pub fn execute_update_lp_token_code_id(
+    deps: DepsMut,
+    info: MessageInfo,
+    lp_token_code_id: u64,
+) -> Result<Response, ContractError> {
+    let mut config = CONFIG.load(deps.storage)?;
+    
+    // Only admin can update LP token code ID
+    if info.sender != config.admin {
+        return Err(ContractError::Unauthorized {});
+    }
+    
+    config.lp_token_code_id = lp_token_code_id;
+    CONFIG.save(deps.storage, &config)?;
+    
+    Ok(Response::new()
+        .add_attribute("method", "update_lp_token_code_id")
+        .add_attribute("lp_token_code_id", lp_token_code_id.to_string()))
 }
