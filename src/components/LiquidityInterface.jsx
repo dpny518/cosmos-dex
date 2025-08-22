@@ -228,6 +228,21 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
         const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
         setTokenA(atomToken);
       }
+      
+      // Load user's LP tokens for remove liquidity
+      const lpTokens = tokenRegistry.getAllLPTokens().filter(lp => 
+        lp.balance && lp.balance !== '0'
+      );
+      
+      const liquidityPositions = lpTokens.map(lpToken => ({
+        pair: lpToken.symbol,
+        amount: (parseFloat(lpToken.balance) / Math.pow(10, lpToken.decimals)).toFixed(6),
+        lpToken,
+        poolInfo: lpToken.poolInfo
+      }));
+      
+      setUserLiquidity(liquidityPositions);
+      console.log('🏊 Loaded LP positions:', liquidityPositions);
     };
     loadTokens();
   }, [balances]);
@@ -350,6 +365,34 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
       }
       
       toast.error('Create pool failed: ' + errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const removeLiquidity = async (lpToken, percentage = 100) => {
+    if (!dex || !lpToken) return;
+    
+    setLoading(true);
+    try {
+      const liquidityAmount = (parseFloat(lpToken.balance) * percentage / 100).toString();
+      
+      await dex.removeLiquidity(
+        lpToken.pair.tokenA.denom,
+        lpToken.pair.tokenB.denom,
+        liquidityAmount
+      );
+      
+      toast.success(`Successfully removed ${percentage}% liquidity!`);
+      
+      // Refresh LP tokens
+      setTimeout(() => {
+        window.location.reload(); // Simple refresh for now
+      }, 1000);
+      
+    } catch (error) {
+      console.error('Remove liquidity failed:', error);
+      toast.error('Remove liquidity failed: ' + error.message);
     } finally {
       setLoading(false);
     }
@@ -536,8 +579,11 @@ const LiquidityInterface = ({ dex, balances = {} }) => {
                     <LiquidityPair>{position.pair}</LiquidityPair>
                     <LiquidityAmount>Liquidity: {position.amount}</LiquidityAmount>
                   </LiquidityInfo>
-                  <RemoveButton>
-                    Remove
+                  <RemoveButton 
+                    onClick={() => removeLiquidity(position.lpToken)}
+                    disabled={loading}
+                  >
+                    {loading ? 'Removing...' : 'Remove 100%'}
                   </RemoveButton>
                 </LiquidityItem>
               ))
