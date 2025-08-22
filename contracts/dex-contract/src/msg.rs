@@ -5,6 +5,7 @@ use cosmwasm_std::{Addr, Uint128};
 pub struct InstantiateMsg {
     pub admin: Option<String>,
     pub fee_rate: Uint128, // Fee rate in basis points (e.g., 30 = 0.3%)
+    pub lp_token_code_id: u64, // Code ID for CW20 LP token contracts
 }
 
 #[cw_serde]
@@ -47,6 +48,10 @@ pub enum ExecuteMsg {
     UpdateFeeRate {
         fee_rate: Uint128,
     },
+    // Update LP token code ID (admin only)
+    UpdateLpTokenCodeId {
+        lp_token_code_id: u64,
+    },
 }
 
 #[cw_serde]
@@ -64,7 +69,7 @@ pub enum QueryMsg {
         start_after: Option<String>,
         limit: Option<u32>,
     },
-    // Get user's liquidity position
+    // Get user's liquidity position (now queries CW20 balance)
     #[returns(LiquidityInfo)]
     Liquidity {
         user: String,
@@ -84,6 +89,7 @@ pub enum QueryMsg {
 pub struct Config {
     pub admin: Addr,
     pub fee_rate: Uint128,
+    pub lp_token_code_id: u64,
 }
 
 #[cw_serde]
@@ -93,6 +99,7 @@ pub struct PoolInfo {
     pub reserve_a: Uint128,
     pub reserve_b: Uint128,
     pub total_liquidity: Uint128,
+    pub lp_token_address: Option<String>, // Address of the CW20 LP token (optional)
 }
 
 #[cw_serde]
@@ -100,6 +107,7 @@ pub struct LiquidityInfo {
     pub liquidity: Uint128,
     pub share_a: Uint128,
     pub share_b: Uint128,
+    pub lp_token_address: Option<String>, // Address of the LP token contract (optional)
 }
 
 #[cw_serde]

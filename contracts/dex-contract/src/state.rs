@@ -7,6 +7,7 @@ use serde::{Deserialize, Serialize};
 pub struct Config {
     pub admin: Addr,
     pub fee_rate: Uint128, // Fee rate in basis points
+    pub lp_token_code_id: u64, // Code ID for CW20 LP token contracts
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
@@ -16,6 +17,7 @@ pub struct Pool {
     pub reserve_a: Uint128,
     pub reserve_b: Uint128,
     pub total_liquidity: Uint128,
+    pub lp_token_address: Option<String>, // Address of the CW20 LP token contract (optional for backward compatibility)
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, JsonSchema)]
