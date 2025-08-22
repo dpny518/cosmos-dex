@@ -8,7 +8,6 @@ import { useDex } from './hooks/useDex.js';
 import Header from './components/Header.jsx';
 import SwapInterface from './components/SwapInterface.jsx';
 import LiquidityInterface from './components/LiquidityInterface.jsx';
-import TokenLaunchpad from './components/TokenLaunchpad.jsx';
 import { config } from './config';
 
 // Import tokenRegistry for LP token balance updates
@@ -213,9 +212,6 @@ function App() {
             <NavButton to="/liquidity">
               Liquidity
             </NavButton>
-            <NavButton to="/launchpad">
-              🚀 Token Launchpad
-            </NavButton>
           </NavContainer>
         </Navigation>
 
@@ -291,9 +287,6 @@ function App() {
               />
             } />
             
-            <Route path="/launchpad" element={
-              <TokenLaunchpad />
-            } />
           </Routes>
         </MainContent>
 
