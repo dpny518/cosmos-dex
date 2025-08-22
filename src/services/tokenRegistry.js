@@ -361,13 +361,13 @@ class TokenRegistry {
         lpToken = this.createLPToken(atomToken, usdcToken);
       }
       
-      // Set LP token balance based on transaction data (100,000 LP tokens minted)
+      // Set LP token balance based on known pool data
       lpToken.balance = '100000'; // From transaction logs
       lpToken.poolInfo = {
-        reserve_a: '100000', // 0.1 ATOM
-        reserve_b: '100000', // 0.1 USDC  
-        total_liquidity: '100000',
-        user_liquidity: '100000' // User owns all liquidity since they created it
+        reserve_a: '100000000', // 100 ATOM (in micro units)
+        reserve_b: '100000000', // 100 USDC (in micro units)
+        total_liquidity: '100000000', // 100 LP tokens (in micro units)
+        user_liquidity: '100000' // User's portion
       };
       
       console.log('✅ ATOM/USDC LP token created:', lpToken);
