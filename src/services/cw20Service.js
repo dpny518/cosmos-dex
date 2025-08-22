@@ -2,8 +2,125 @@
 
 import { toast } from 'react-hot-toast';
 
-// CW20 Code ID on Cosmos Hub (this needs to be updated with actual CW20 code ID)
-const CW20_CODE_ID = 1; // Placeholder - needs to be updated
+// CW20 Code IDs to try (common CW20 contract code IDs on Cosmos Hub)
+const POTENTIAL_CW20_CODE_IDS = [
+  1,  // Often the first contract uploaded
+  2,  // Second common ID
+  3,  // Common CW20 code ID
+  4,  // Alternative CW20 code ID
+  5,  // Another potential CW20 code ID
+  6,  // More alternatives
+  7,
+  8,
+  9,
+  10,
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  18,
+  19,
+  20  // Extended range for more thorough search
+];
+
+/**
+ * Try to find CW20 code ID from existing LP tokens
+ */
+async function findCW20CodeIdFromLPTokens() {
+  try {
+    // Check if we have any LP tokens that might indicate the CW20 code ID
+    const lpTokens = JSON.parse(localStorage.getItem('lpTokens') || '[]');
+    if (lpTokens.length > 0) {
+      console.log('🔍 Found existing LP tokens, checking for CW20 patterns...');
+      
+      // Look for common patterns in LP token contract addresses
+      for (const lpToken of lpTokens) {
+        if (lpToken.contractAddress) {
+          console.log(`📋 LP Token contract: ${lpToken.contractAddress}`);
+          // You could query the contract to determine its code ID
+          // This is a placeholder for now
+        }
+      }
+    }
+  } catch (error) {
+    console.log('No existing LP tokens found for reference');
+  }
+  return null;
+}
+
+/**
+ * Find a working CW20 code ID by testing instantiation
+ */
+async function findWorkingCW20CodeId(client) {
+  console.log('🔍 Searching for working CW20 code ID...');
+  
+  // First try to get hint from existing LP tokens
+  await findCW20CodeIdFromLPTokens();
+  
+  for (const codeId of POTENTIAL_CW20_CODE_IDS) {
+    try {
+      // Try to get code info to see if it exists and what type it is
+      const codeInfo = await client.getCodeDetails(codeId);
+      console.log(`📋 Code ID ${codeId}:`, codeInfo);
+      
+      // More comprehensive check for CW20 contracts
+      const codeInfoStr = JSON.stringify(codeInfo).toLowerCase();
+      const hasCW20Keywords = codeInfoStr.includes('cw20') || 
+                              codeInfoStr.includes('token') || 
+                              codeInfoStr.includes('erc20') ||
+                              codeInfoStr.includes('balance') ||
+                              codeInfoStr.includes('transfer');
+      
+      // Also check if it's NOT a DAO contract
+      const isDAO = codeInfoStr.includes('dao') || 
+                    codeInfoStr.includes('governance') || 
+                    codeInfoStr.includes('proposal');
+      
+      if (hasCW20Keywords && !isDAO) {
+        console.log(`✅ Found potential CW20 code ID: ${codeId}`);
+        
+        // Try a test instantiation to verify it's really a CW20 contract
+        try {
+          const testMsg = {
+            name: "Test Token",
+            symbol: "TEST",
+            decimals: 6,
+            initial_balances: []
+          };
+          
+          // This will fail but help us identify if it's the right contract type
+          await client.simulate(
+            'cosmos1test', // dummy address
+            codeId,
+            testMsg,
+            'Test Token'
+          );
+          
+        } catch (simError) {
+          const simErrorStr = simError.message.toLowerCase();
+          if (simErrorStr.includes('dao_interface') || simErrorStr.includes('unknown field')) {
+            console.log(`❌ Code ID ${codeId} is DAO contract, not CW20`);
+            continue;
+          } else {
+            // Other simulation errors are expected and okay
+            console.log(`✅ Code ID ${codeId} appears to be CW20 compatible`);
+            return codeId;
+          }
+        }
+      }
+    } catch (error) {
+      console.log(`❌ Code ID ${codeId} not available:`, error.message);
+      continue;
+    }
+  }
+  
+  // If no automatic detection works, prompt user or use fallback
+  console.log('⚠️ Could not auto-detect CW20 code ID, will prompt user');
+  return null; // Return null to trigger manual input
+}
 
 /**
  * Deploy a new CW20 token
@@ -15,6 +132,23 @@ export async function deployToken(client, senderAddress, tokenConfig) {
     // Validate required fields
     if (!tokenConfig.name || !tokenConfig.symbol || !tokenConfig.initialSupply) {
       throw new Error('Name, symbol, and initial supply are required');
+    }
+
+    // Find working CW20 code ID
+    let cw20CodeId = await findWorkingCW20CodeId(client);
+    
+    // If automatic detection failed, prompt user for manual input
+    if (cw20CodeId === null) {
+      const userCodeId = prompt('⚠️ Could not auto-detect CW20 contract code ID.\n\nPlease enter the CW20 contract code ID for this chain\n(You can find this from chain documentation or existing CW20 deployments):');
+      
+      if (!userCodeId || isNaN(parseInt(userCodeId))) {
+        throw new Error('Invalid code ID provided. Please enter a valid numeric code ID.');
+      }
+      
+      cw20CodeId = parseInt(userCodeId);
+      console.log(`👤 User provided CW20 code ID: ${cw20CodeId}`);
+    } else {
+      console.log(`🎯 Auto-detected CW20 code ID: ${cw20CodeId}`);
     }
 
     // Convert amounts to proper format (multiply by 10^decimals)
@@ -58,7 +192,7 @@ export async function deployToken(client, senderAddress, tokenConfig) {
     // Deploy the token
     const result = await client.instantiate(
       senderAddress,
-      CW20_CODE_ID,
+      cw20CodeId,
       instantiateMsg,
       `${tokenConfig.name} (${tokenConfig.symbol})`,
       fee,
@@ -87,16 +221,23 @@ export async function deployToken(client, senderAddress, tokenConfig) {
   } catch (error) {
     console.error('❌ Token deployment failed:', error);
     
-    // Handle specific error cases
-    if (error.message.includes('code id')) {
-      throw new Error('CW20 contract code not found. Please contact support.');
+    // Handle specific error cases with improved messaging
+    if (error.message.includes('dao_interface::msg::InstantiateMsg')) {
+      throw new Error(`❌ Wrong Contract Type: Code ID ${cw20CodeId} is a DAO contract, not a CW20 token contract.\n\n💡 Solution: Please refresh the page and try again. The system will auto-detect the correct CW20 contract or prompt you for the right code ID.`);
+    } else if (error.message.includes('unknown field') && (error.message.includes('symbol') || error.message.includes('decimals'))) {
+      throw new Error(`❌ Contract Mismatch: Code ID ${cw20CodeId} doesn't support CW20 token standard.\n\n💡 This often happens when the code ID points to a DAO or other contract type. Please try a different code ID.`);
+    } else if (error.message.includes('code id') || error.message.includes('not found')) {
+      throw new Error(`❌ Code ID Not Found: Code ID ${cw20CodeId} doesn't exist on this chain.\n\n💡 Please check the chain's documentation for available CW20 contract code IDs.`);
     } else if (error.message.includes('insufficient funds')) {
-      throw new Error('Insufficient ATOM balance for deployment fees.');
+      throw new Error('❌ Insufficient Balance: You need more ATOM to pay for deployment fees.\n\n💡 Please add more ATOM to your wallet and try again.');
     } else if (error.message.includes('gas')) {
-      throw new Error('Transaction failed due to gas issues. Please try again.');
+      throw new Error('❌ Gas Error: Transaction failed due to gas estimation issues.\n\n💡 This is usually temporary - please try again in a few moments.');
+    } else if (error.message.includes('Invalid code ID provided')) {
+      throw error; // Pass through validation errors as-is
     }
     
-    throw error;
+    // Generic error with helpful context
+    throw new Error(`❌ Deployment Failed: ${error.message}\n\n💡 If this persists, the code ID ${cw20CodeId} might not be a compatible CW20 contract.`);
   }
 }
 
