@@ -3,6 +3,7 @@ import styled from 'styled-components';
 import { toast } from 'react-hot-toast';
 import TokenSelector from './TokenSelector';
 import { tokenRegistry } from '../services/tokenRegistry';
+import { config } from '../config';
 
 const Container = styled.div`
   background: white;
@@ -153,19 +154,51 @@ const SwapInterface = ({ dex, balances = {} }) => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Load tokens including those from user balances
-    const loadTokens = async () => {
-      console.log('🔄 SwapInterface: Loading tokens with balances:', balances);
-      const tokens = await tokenRegistry.loadTokens(balances);
-      console.log('📋 SwapInterface: Loaded tokens:', tokens.length);
+    // Load only swappable tokens (tokens with liquidity pools)
+    const loadSwappableTokens = async () => {
+      console.log('🔄 SwapInterface: Loading swappable tokens...');
       
-      if (tokens.length > 0 && !tokenIn) {
-        const atomToken = tokens.find(t => t.symbol === 'ATOM') || tokens[0];
+      // First load all tokens to populate registry
+      await tokenRegistry.loadTokens(balances);
+      
+      // Then get only tokens with liquidity
+      let swappableTokens = [];
+      if (dex && dex.client) {
+        // Try to get contract address from multiple sources
+        const contractAddress = dex.contractAddress || 
+                               config.contractAddress ||
+                               import.meta.env?.VITE_CONTRACT_ADDRESS;
+        
+        if (contractAddress && contractAddress !== 'cosmos1...') {
+          console.log('🔗 Using contract address:', contractAddress);
+          swappableTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
+        } else {
+          console.log('⚠️ No valid contract address found');
+        }
+      }
+      
+      // Fallback to all tokens if we couldn't get swappable ones
+      if (swappableTokens.length === 0) {
+        console.log('⚠️ No swappable tokens found, using fallback');
+        swappableTokens = tokenRegistry.getAllTokens().filter(token => 
+          token.symbol === 'ATOM' || 
+          token.symbol === 'USDC' ||
+          token.force_added ||
+          token.manually_added
+        );
+      }
+      
+      console.log('📋 SwapInterface: Loaded swappable tokens:', swappableTokens.length);
+      console.log('🎯 Available for swap:', swappableTokens.map(t => t.symbol).join(', '));
+      
+      if (swappableTokens.length > 0 && !tokenIn) {
+        const atomToken = swappableTokens.find(t => t.symbol === 'ATOM') || swappableTokens[0];
         setTokenIn(atomToken);
       }
     };
-    loadTokens();
-  }, [balances]);
+    
+    loadSwappableTokens();
+  }, [balances, dex]);
 
   useEffect(() => {
     if (tokenIn && tokenOut && amountIn && parseFloat(amountIn) > 0) {
@@ -375,6 +408,8 @@ const SwapInterface = ({ dex, balances = {} }) => {
         }}
         onSelect={handleTokenSelect}
         balances={balances}
+        swappableOnly={true}
+        dex={dex}
       />
     </Container>
   );

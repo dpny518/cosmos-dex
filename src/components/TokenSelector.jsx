@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import styled from 'styled-components';
 import { tokenRegistry } from '../services/tokenRegistry';
+import { config } from '../config';
 
 const Modal = styled.div`
   position: fixed;
@@ -165,7 +166,7 @@ const NoResults = styled.div`
   color: #666;
 `;
 
-const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {} }) => {
+const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}, swappableOnly = false, dex = null }) => {
   const [tokens, setTokens] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('all'); // all, native, ibc, lp
@@ -180,13 +181,36 @@ const TokenSelector = ({ isOpen, onClose, onSelect, selectedToken, balances = {}
   const loadTokens = async () => {
     setLoading(true);
     try {
-      console.log('🔄 TokenSelector: Loading tokens with balances:', balances);
+      console.log('🔄 TokenSelector: Loading tokens...', { swappableOnly, balances });
       await tokenRegistry.loadTokens(balances);
       
-      // Get all tokens including LP tokens with balances
-      const allTokens = tokenRegistry.getAllTokensWithLP();
+      let allTokens;
       
-      console.log('📋 TokenSelector: All tokens loaded:', allTokens.length);
+      if (swappableOnly && dex) {
+        // Get only swappable tokens for swap interface
+        const contractAddress = dex.contractAddress || 
+                               config.contractAddress ||
+                               import.meta.env?.VITE_CONTRACT_ADDRESS;
+        
+        if (contractAddress && contractAddress !== 'cosmos1...' && dex.client) {
+          console.log('🏊 Getting swappable tokens only...', contractAddress);
+          allTokens = await tokenRegistry.getSwappableTokens(dex.client, contractAddress);
+        } else {
+          console.log('⚠️ No valid contract address or client, using fallback tokens');
+          allTokens = tokenRegistry.getAllTokens().filter(token => 
+            token.symbol === 'ATOM' || 
+            token.symbol === 'USDC' ||
+            token.force_added ||
+            token.manually_added
+          );
+        }
+      } else {
+        // Get all tokens including LP tokens with balances (for liquidity interface)
+        allTokens = tokenRegistry.getAllTokensWithLP();
+      }
+      
+      console.log('📋 TokenSelector: Tokens loaded:', allTokens.length);
+      console.log('🎯 Token types:', swappableOnly ? 'Swappable only' : 'All tokens + LP');
       console.log('🔍 TokenSelector: Token list:', allTokens.map(t => ({
         symbol: t.symbol,
         denom: t.denom,
