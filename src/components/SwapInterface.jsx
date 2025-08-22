@@ -232,8 +232,8 @@ const SwapInterface = ({ dex, balances = {} }) => {
     
     setLoading(true);
     try {
-      const amountInWei = (parseFloat(amountIn) * Math.pow(10, tokenIn.decimals)).toString();
-      const minAmountOut = (parseFloat(amountOut) * 0.95 * Math.pow(10, tokenOut.decimals)).toString(); // 5% slippage
+      const amountInWei = Math.floor(parseFloat(amountIn) * Math.pow(10, tokenIn.decimals)).toString();
+      const minAmountOut = Math.floor(parseFloat(amountOut) * 0.95 * Math.pow(10, tokenOut.decimals)).toString(); // 5% slippage
       
       await dex.swap(tokenIn.denom, tokenOut.denom, amountInWei, minAmountOut);
       
