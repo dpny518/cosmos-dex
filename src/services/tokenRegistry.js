@@ -481,15 +481,47 @@ class TokenRegistry {
     const swappableTokens = new Set();
     
     try {
-      // Get all pools from contract
-      const poolsResponse = await client.queryContractSmart(contractAddress, {
-        pools: { limit: 100 }
-      });
+      // Use the same robust querying approach as PoolsInterface
+      let poolsResponse = null;
+      const queryMethods = [
+        { pools: { limit: 100 } },
+        { all_pools: {} },
+        { list_pools: { limit: 100 } },
+        { get_pools: {} }
+      ];
+
+      console.log('🔍 Trying different query methods for pools...');
       
-      console.log('📊 Found pools in contract:', poolsResponse.pools?.length || 0);
+      for (const query of queryMethods) {
+        try {
+          console.log('🔍 Trying query:', query);
+          poolsResponse = await client.queryContractSmart(contractAddress, query);
+          console.log('✅ Success with query:', query, 'Response:', poolsResponse);
+          break;
+        } catch (queryError) {
+          console.log('❌ Query failed:', query, 'Error:', queryError.message);
+        }
+      }
+
+      if (!poolsResponse) {
+        console.log('❌ All pool query methods failed');
+        return fallbackTokens;
+      }
+
+      // Extract pools from different possible response formats
+      let poolsArray = [];
+      if (poolsResponse.pools && Array.isArray(poolsResponse.pools)) {
+        poolsArray = poolsResponse.pools;
+      } else if (Array.isArray(poolsResponse)) {
+        poolsArray = poolsResponse;
+      } else if (poolsResponse.data && Array.isArray(poolsResponse.data)) {
+        poolsArray = poolsResponse.data;
+      }
+
+      console.log('📊 Found pools in contract:', poolsArray.length);
       
       // For each pool, add both tokens to the swappable set
-      for (const pool of poolsResponse.pools || []) {
+      for (const pool of poolsArray) {
         // Only include pools with actual liquidity
         if (pool.reserve_a && pool.reserve_b && 
             parseFloat(pool.reserve_a) > 0 && 
